@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "gestaodefrota-498416",
+  "private_key_id": "b86f8b663ae20f4279a4fa0fd8606df69409cc9e",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEuwIBADANBgkqhkiG9w0BAQEFAASCBKUwggShAgEAAoIBAQC5JIJ7Qh1/PjbF\nwwyhjZDPj3V/sZTcqqasLTeSWmlDShlhE2Fzfv8J4WEiA88q1FB/gKXlVoLJl6fb\nj2q1PyIqEKORtFqO3LrGtWzDSPN2RHSGaUS3pyg4MlTmn9fthor1TRWPCMPZcfGk\nSHJCrk7vFjUx5K5lHGRsUbqYqFzFmDmO9ZSCECf4XXfBDVbGuiVes0zHXbEYLfng\nljbBW9R0dASUdyCAD1VDdb10VWSVHroL3z2u/Dcy7N29h/l3coabxbZFEPh6KxR7\nHDT2dSaTHqjTVEWNLnjMkquCzPptIGWds7gbjTX9b0UpTYrtm7tiFN4E2mhUQ5NY\noMaurrVHAgMBAAECggEAJaCxciqYQx2aVSwUm5rhdQXDjB3D0utN741LD5AXd6kO\nKmgddLM5U0E+lAKxLpOy/o7faJJiB2WupFVsCwUXRPRXwgulIgbjYPJLdg8UCBPW\nmOC5KhgreOxly+9tm6UuBbfSa10NLNrXERv2OO4jNb1ON2MyPHN+R3N+2HrTTAcQ\noT5JbYtYdlSgrMjREMlfaLpXtWboqhch+e5msDzGSzLH1RKJfLe7VS2yNwQhgyj9\nuJIYnIqFkb6n0FLVPbq4GclqlX/K8g+BVhgYOU8Nq48ezXIRIMip8Sch1Nm9zN7o\nMqI8F213CbUXR/3c3qBUtiZ+La96bAMBxNqfkRt9YQKBgQDyH0fqM8aVnRGx/Z0C\naqnNwoi4EiTuDodDuakSAyGDVu8S4CrrI6smhbmnj/2vOJeyCHXRrHVDDTf/6dq8\nLE2wkLes7iZlPdT7f2S1vfhlsXgWgl3iIXsPh3Ysv9dqcfPIM/7xTruqz8bq2aer\nJTbYD+ExhdY7/55dh4VWcfmk4QKBgQDDwSc/T8gCjLVvHK1YmvFsVjhaazGhRyPD\nyZFdst6ZRHoJR8ZZmtUs9wxK2TKwtteG1b03pHs/I2y0QSkIqJUX617UegiUGnjD\nQqskXDiyL4Y3qgVDX9Ovz4gqYuf7Cy41dgl77268D5rSePy9yG2962F/WFe/v27G\nIeZ4REJ3JwJ/f63/PoIPNtadfj8/jQayhM8RSgBHeUIwEobVoaoFAj3V1R5hg55L\nowTh4nsMTFqLpFbRysAnFjTiUxH/RzwVvAaU1ZzAoqL4raeAdFa5pubvbO9Sku0U\n+Bt3NiH0dy2gYPMKfjYGwQzQ2QfuY1I8mbPGDVeGoh0qZigRKITyIQKBgFvITKaa\nuaS4ZLlcMMrCmz+4jWOXrwV3XYWHFOlh3IzwVmfTh2Sr/BfBHbpabDH/CL7nqHhW\nXpMUAPvjMWIl6QH2Edh9/1exsb2bnLLHqq2hKsUeqqkUXSSpoaZ+CVbjvx7B4WCC\nuuDiUC0vHRG+z/WkT2pt+XamQ0IS0wTAvIkxAoGBAOcNI/84CK6u4qCbvleYxiIq\nXe0xv56LpkRFWBKKhdwqky59B2cd/nmFsH1eWvaISNxpF+IOj+1ITT5R/EDstUXU\n7brTX8Gu23eMDX84uuy6fSnloCHJ4Je1Pl8MfLkTVcpl3FrV9JaO7AFLE2xwHYd5\nQUf9vFQmxgDIyMil9mLR\n-----END PRIVATE KEY-----\n",
+  "client_email": "gest-o-de-frota@gestaodefrota-498416.iam.gserviceaccount.com",
+  "client_id": "113805131550646004475",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/gest-o-de-frota%40gestaodefrota-498416.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
