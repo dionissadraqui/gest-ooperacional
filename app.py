@@ -9,6 +9,8 @@ Coloque na mesma pasta:
 Execute com:
   streamlit run app.py
 """
+#  python3 -m streamlit run app.py
+
 
 import os
 import json
@@ -405,11 +407,12 @@ HTML = f"""<!DOCTYPE html>
 .modal-box{{background:#ffffff;border:1.5px solid #dde6f4;width:100%;max-width:100%;height:100vh;border-radius:0;padding:20px;display:flex;flex-direction:column;gap:12px;box-shadow:0 16px 48px rgba(20,50,120,0.18)}}
 .modal-header{{display:flex;justify-content:space-between;align-items:center;border-bottom:1.5px solid #dde6f4;padding-bottom:10px}}
 .modal-title{{font-size:18px;font-weight:800;color:#1a3a6b;text-transform:uppercase;display:flex;align-items:center;gap:8px}}
-.btn-close{{background:#f0f4fa;color:#5a6e8a;border:1px solid #c4d0e4;width:28px;height:28px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center}}
-.btn-close:hover{{background:#dc2626;color:#fff;border-color:#dc2626}}
+.btn-close{{background:#7a1a1a;color:#ffffff;border:1px solid #5c1212;width:28px;height:28px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center}}
+.btn-close:hover{{background:#ff2222;color:#fff;border-color:#ff4444;box-shadow:0 0 10px rgba(255,50,50,0.7),0 0 20px rgba(255,50,50,0.4)}}
 .modal-split{{display:grid;grid-template-columns:280px 1fr;gap:14px;flex:1;overflow:hidden}}
 .modal-sidebar{{display:flex;flex-direction:column;gap:8px}}
-.modal-kpi-card{{background:#f8fafd;border:1.5px solid #dde6f4;padding:14px;border-radius:8px}}
+.modal-kpi-card{{background:#f8fafd;border:1.5px solid #dde6f4;padding:14px;border-radius:8px;cursor:pointer;transition:border-color .15s,box-shadow .15s}}
+.modal-kpi-card:hover{{border-color:#3b7dd8;box-shadow:0 2px 12px rgba(59,125,216,0.18)}}
 .m-lbl{{font-size:12px;color:#5a6e8a;text-transform:uppercase;font-weight:700;letter-spacing:1px}}
 .m-val{{font-size:36px;font-weight:900;color:#1a3a6b}}
 .modal-main{{background:#f8fafd;border:1.5px solid #dde6f4;border-radius:8px;display:flex;flex-direction:column;overflow:hidden}}
@@ -449,13 +452,13 @@ HTML = f"""<!DOCTYPE html>
 .btn-save-master:hover{{background:transparent;color:#dc2626;border-color:#dc2626;box-shadow:0 0 12px rgba(220,38,38,0.18)}}
 
 /* ── FICHA INDIVIDUAL ── */
-.driver-profile-grid{{display:grid;grid-template-columns:260px 1fr;gap:16px;padding:18px;background:#f0f4fa}}
+.driver-profile-grid{{display:grid;grid-template-columns:340px 1fr;gap:16px;padding:18px;background:#f0f4fa}}
 .profile-details-right{{display:flex;flex-direction:column;gap:14px}}
 .info-section-box{{background:#ffffff;border-radius:12px;padding:0;overflow:hidden;box-shadow:0 2px 8px rgba(20,50,120,0.08);border:1.5px solid #dde6f4;transition:box-shadow .2s}}
 .info-section-box:hover{{box-shadow:0 4px 16px rgba(20,50,120,0.13)}}
 .card-stripe{{height:4px;width:100%;border-radius:0;display:block}}
 .card-body{{padding:14px 16px 16px}}
-.info-block-title{{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid #e8eef8;padding-bottom:6px;margin-bottom:12px;display:flex;align-items:center;gap:7px}}
+.info-block-title{{font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid #e8eef8;padding-bottom:6px;margin-bottom:12px;display:flex;align-items:center;gap:7px}}
 .card-condutor{{border-color:#3b7dd8}}
 .card-condutor .card-stripe{{background:linear-gradient(90deg,#1a4fa0,#3b7dd8)}}
 .card-condutor .info-block-title{{color:#1a4fa0}}
@@ -490,8 +493,8 @@ HTML = f"""<!DOCTYPE html>
 .card-highlight-dss .card-stripe{{background:linear-gradient(90deg,#15803d,#22c55e)!important}}
 .meta-grid{{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}}
 .meta-item{{display:flex;flex-direction:column;gap:3px}}
-.meta-item label{{font-size:9px;color:#5a6e8a;text-transform:uppercase;font-weight:700}}
-.meta-item input,.meta-item select{{background:#f4f7fc;border:1px solid #c4d0e4;color:#1a2a44;padding:5px 8px;border-radius:5px;font-size:12px;outline:none;transition:border-color .15s,background .15s,box-shadow .15s}}
+.meta-item label{{font-size:13px;color:#5a6e8a;text-transform:uppercase;font-weight:700}}
+.meta-item input,.meta-item select{{background:#f4f7fc;border:1px solid #c4d0e4;color:#1a2a44;padding:8px 10px;border-radius:5px;font-size:16px;outline:none;transition:border-color .15s,background .15s,box-shadow .15s}}
 .meta-item input:focus,.meta-item select:focus{{border-color:#3b7dd8;background:#ffffff;box-shadow:0 0 0 2px rgba(59,125,216,.12)}}
 .card-contato .meta-item input:focus,.card-contato .meta-item select:focus{{border-color:#0e9cc0;box-shadow:0 0 0 2px rgba(14,156,192,.12)}}
 .card-docs .meta-item input:focus,.card-docs .meta-item select:focus{{border-color:#5a5fe8;box-shadow:0 0 0 2px rgba(90,95,232,.12)}}
@@ -500,9 +503,9 @@ HTML = f"""<!DOCTYPE html>
 .obs-input{{background:#f9fafd!important;border:1px solid #d0daea!important;color:#3a4a62!important;font-size:11px!important;font-style:italic}}
 .dss-matrix-container{{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}}
 .month-dss-box{{background:#f0faf4;border:1px solid #bbddc8;border-radius:7px;padding:7px}}
-.month-name-lbl{{font-size:8px;font-weight:800;color:#15803d;text-transform:uppercase;margin-bottom:4px;text-align:center;border-bottom:1px solid #c8e8d4;padding-bottom:3px}}
+.month-name-lbl{{font-size:12px;font-weight:800;color:#15803d;text-transform:uppercase;margin-bottom:4px;text-align:center;border-bottom:1px solid #c8e8d4;padding-bottom:3px}}
 .weeks-flex{{display:flex;justify-content:space-between;gap:2px}}
-.week-checkbox-label{{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:8px;color:#2d6a4a;cursor:pointer;flex:1;font-weight:600}}
+.week-checkbox-label{{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;color:#2d6a4a;cursor:pointer;flex:1;font-weight:600}}
 .week-checkbox-label input{{cursor:pointer;accent-color:#16a34a}}
 .btn-delete-driver{{background:#fff0f0;color:#cc2222;border:1px solid #e8aaaa;padding:8px;border-radius:7px;font-size:10px;font-weight:700;text-transform:uppercase;cursor:pointer;margin-top:12px;display:flex;align-items:center;justify-content:center;gap:6px;transition:.18s;width:100%}}
 .btn-delete-driver:hover{{background:#cc2222;color:#fff;border-color:#cc2222}}
@@ -521,24 +524,24 @@ HTML = f"""<!DOCTYPE html>
 .kpi-modal-head{{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1.5px solid #dde6f4;flex-shrink:0;background:#f8fafd}}
 .kpi-modal-head-left{{display:flex;align-items:center;gap:12px}}
 .kpi-modal-icon{{width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}}
-.kpi-modal-label{{font-size:11px;font-weight:800;color:#1a3a6b;text-transform:uppercase;letter-spacing:1.5px}}
-.kpi-modal-count{{font-size:10px;color:#5a6e8a;margin-top:2px}}
-.kpi-modal-close{{background:#f0f4fa;color:#5a6e8a;border:1px solid #c4d0e4;width:30px;height:30px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}}
-.kpi-modal-close:hover{{background:#dc2626;color:#fff;border-color:#dc2626}}
+.kpi-modal-label{{font-size:16px;font-weight:800;color:#1a3a6b;text-transform:uppercase;letter-spacing:1.5px}}
+.kpi-modal-count{{font-size:14px;color:#5a6e8a;margin-top:2px}}
+.kpi-modal-close{{background:#7a1a1a;color:#ffffff;border:1px solid #5c1212;width:30px;height:30px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}}
+.kpi-modal-close:hover{{background:#ff2222;color:#fff;border-color:#ff4444;box-shadow:0 0 10px rgba(255,50,50,0.7),0 0 20px rgba(255,50,50,0.4)}}
 .kpi-modal-search{{padding:10px 20px;border-bottom:1px solid #eef3fb;flex-shrink:0;background:#fff}}
 .kpi-modal-search input{{width:100%;background:#f4f7fc;border:1.5px solid #c4d0e4;color:#1a2a44;padding:7px 12px;border-radius:6px;font-size:12px;outline:none}}
 .kpi-modal-search input:focus{{border-color:#3b7dd8;background:#fff}}
 .kpi-mes-filtro{{display:none;padding:8px 20px 0;gap:6px;flex-wrap:wrap;flex-shrink:0;background:#fff}}
 .kpi-mes-filtro.visible{{display:flex}}
-.mes-btn{{padding:4px 10px;border-radius:20px;border:1.5px solid #c4d0e4;background:#f4f7fc;color:#5a6e8a;font-size:10px;font-weight:700;cursor:pointer;letter-spacing:.5px;transition:all .15s}}
+.mes-btn{{padding:6px 14px;border-radius:20px;border:1.5px solid #c4d0e4;background:#f4f7fc;color:#5a6e8a;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;transition:all .15s}}
 .mes-btn.ativo{{background:#16a34a;border-color:#16a34a;color:#fff}}
 .dmc-semanas{{display:flex;gap:4px;margin-top:3px}}
 .dmc-sem{{display:flex;flex-direction:column;align-items:center;gap:2px;flex:1}}
-.dmc-sem-lbl{{font-size:7px;color:#8899aa;font-weight:700;text-transform:uppercase}}
-.dmc-sem-dot{{width:18px;height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900}}
+.dmc-sem-lbl{{font-size:11px;color:#8899aa;font-weight:700;text-transform:uppercase}}
+.dmc-sem-dot{{width:24px;height:24px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900}}
 .dmc-sem-dot.ok{{background:rgba(22,163,74,0.15);color:#16a34a;border:1px solid rgba(22,163,74,0.35)}}
 .dmc-sem-dot.pend{{background:rgba(220,38,38,0.08);color:#dc2626;border:1px solid rgba(220,38,38,0.2)}}
-.kpi-cards-grid{{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;padding:16px 20px;overflow-y:auto;flex:1;align-content:start;background:#f0f4fa}}
+.kpi-cards-grid{{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;padding:20px 24px;overflow-y:auto;flex:1;align-content:start;background:#f0f4fa}}
 .driver-mini-card{{background:#ffffff;border:1.5px solid #dde6f4;border-radius:10px;padding:14px;cursor:pointer;transition:border-color .15s,transform .15s,box-shadow .15s;display:flex;flex-direction:column;gap:10px;box-shadow:0 2px 6px rgba(20,50,120,0.06)}}
 .driver-mini-card.card-ok{{border-color:rgba(22,163,74,0.45);background:#f0fef4}}
 .driver-mini-card.card-pend{{border-color:rgba(217,119,6,0.45);background:#fffbeb}}
@@ -547,11 +550,11 @@ HTML = f"""<!DOCTYPE html>
 .dmc-avatar{{width:48px;height:48px;border-radius:50%;background:#eef3fb;border:2px solid #c4d0e4;display:flex;align-items:center;justify-content:center;font-size:20px;color:#3b7dd8;flex-shrink:0;overflow:hidden}}
 .dmc-avatar img{{width:100%;height:100%;object-fit:cover;border-radius:50%}}
 .dmc-info{{flex:1;min-width:0}}
-.dmc-nome{{font-size:13px;font-weight:800;color:#1a3a6b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.2px;margin-bottom:3px}}
-.dmc-filial{{font-size:10px;color:#3b7dd8;text-transform:uppercase;font-weight:700;letter-spacing:.5px;margin-bottom:2px}}
-.dmc-cpf{{font-size:11px;color:#5a6e8a;font-family:monospace;letter-spacing:.8px;font-weight:600}}
+.dmc-nome{{font-size:16px;font-weight:800;color:#1a3a6b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.2px;margin-bottom:3px}}
+.dmc-filial{{font-size:13px;color:#3b7dd8;text-transform:uppercase;font-weight:700;letter-spacing:.5px;margin-bottom:2px}}
+.dmc-cpf{{font-size:14px;color:#5a6e8a;font-family:monospace;letter-spacing:.8px;font-weight:600}}
 .dmc-badges{{display:flex;flex-wrap:wrap;gap:5px}}
-.dmc-badge{{padding:3px 8px;border-radius:4px;font-size:10px;font-weight:800;letter-spacing:.3px;display:flex;align-items:center;gap:4px}}
+.dmc-badge{{padding:5px 12px;border-radius:4px;font-size:13px;font-weight:800;letter-spacing:.3px;display:flex;align-items:center;gap:4px}}
 .dmc-badge.ok{{background:rgba(22,163,74,0.1);color:#16a34a;border:1px solid rgba(22,163,74,0.3)}}
 .dmc-badge.pend{{background:rgba(217,119,6,0.1);color:#d97706;border:1px solid rgba(217,119,6,0.3)}}
 .dmc-infracao{{display:flex;align-items:center;gap:10px;background:#f4f7fc;border-radius:8px;padding:10px 12px;border:1.5px solid #dde6f4}}
@@ -732,15 +735,18 @@ HTML = f"""<!DOCTYPE html>
     </div>
     <div class="modal-split">
       <div class="modal-sidebar">
-        <div class="modal-kpi-card"><div class="m-lbl">Total de Motoristas</div><div class="m-val" id="mTotalDrivers">0</div></div>
-        <div class="modal-kpi-card"><div class="m-lbl">DSS Realizados (Ano)</div><div class="m-val" id="mWithDss" style="color:#22cc88">0</div></div>
-        <div class="modal-kpi-card"><div class="m-lbl">Reciclagem OK</div><div class="m-val" id="mRecOk" style="color:#16a34a">0</div></div>
-        <div class="modal-kpi-card"><div class="m-lbl">Simulador OK</div><div class="m-val" id="mSimOk" style="color:#3b7dd8">0</div></div>
-        <div class="modal-kpi-card"><div class="m-lbl">Excesso Velocidade</div><div class="m-val" id="mExcVel" style="color:#dc2626">0</div></div>
-        <div class="modal-kpi-card"><div class="m-lbl">Total Multas</div><div class="m-val" id="mMultas" style="color:#d97706">0</div></div>
-        <div class="modal-kpi-card"><div class="m-lbl">Total Acidentes</div><div class="m-val" id="mAcidentes" style="color:#dc2626">0</div></div>
+        <div class="modal-kpi-card" onclick="filtrarFilialPorIndicador('todos')"><div class="m-lbl">Total de Motoristas</div><div class="m-val" id="mTotalDrivers">0</div></div>
+        <div class="modal-kpi-card" onclick="filtrarFilialPorIndicador('dss')"><div class="m-lbl">DSS Realizados (Ano)</div><div class="m-val" id="mWithDss" style="color:#22cc88">0</div></div>
+        <div class="modal-kpi-card" onclick="filtrarFilialPorIndicador('reciclagem')"><div class="m-lbl">Reciclagem OK</div><div class="m-val" id="mRecOk" style="color:#16a34a">0</div></div>
+        <div class="modal-kpi-card" onclick="filtrarFilialPorIndicador('simulador')"><div class="m-lbl">Simulador OK</div><div class="m-val" id="mSimOk" style="color:#3b7dd8">0</div></div>
+        <div class="modal-kpi-card" onclick="filtrarFilialPorIndicador('excesso')"><div class="m-lbl">Excesso Velocidade</div><div class="m-val" id="mExcVel" style="color:#dc2626">0</div></div>
+        <div class="modal-kpi-card" onclick="filtrarFilialPorIndicador('multas')"><div class="m-lbl">Total Multas</div><div class="m-val" id="mMultas" style="color:#d97706">0</div></div>
+        <div class="modal-kpi-card" onclick="filtrarFilialPorIndicador('acidentes')"><div class="m-lbl">Total Acidentes</div><div class="m-val" id="mAcidentes" style="color:#dc2626">0</div></div>
       </div>
       <div class="modal-main">
+        <div style="padding:10px 14px;border-bottom:1px solid #dde6f4;background:#fff;flex-shrink:0;">
+          <input type="text" id="filialSearchInput" placeholder="🔍  Buscar por nome ou CPF…" oninput="filtrarTabelaFilial()" style="width:100%;background:#f4f7fc;border:1.5px solid #c4d0e4;color:#1a2a44;padding:7px 12px;border-radius:6px;font-size:13px;outline:none;">
+        </div>
         <div class="table-container">
           <table class="m-table">
             <thead>
@@ -1195,6 +1201,43 @@ function expandirFilial(nomeFilial){{
 }}
 
 function fecharJanelaFilial(){{ document.getElementById('filialModal').style.display = 'none'; }}
+function filtrarTabelaFilial(){{
+  const q = document.getElementById('filialSearchInput').value.toLowerCase();
+  document.querySelectorAll('#mDriversTableBody tr').forEach(tr => {{
+    tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+  }});
+}}
+function filtrarFilialPorIndicador(tipo){{
+  document.querySelectorAll('#mDriversTableBody tr').forEach(tr => {{
+    tr.style.display = '';
+  }});
+  document.getElementById('filialSearchInput').value = '';
+  const listagem = motoristasDB.filter(m => (m.filial||'').toUpperCase() === (filialModalAtiva||'').toUpperCase());
+  const filtrados = listagem.filter(m => {{
+   if(tipo==='todos')     return true;
+    if(tipo==='dss')       return contarDssSessoes(m) > 0;
+    if(tipo==='reciclagem') return m.reciclagem === 'OK';
+    if(tipo==='simulador') return m.simulador === 'OK';
+    if(tipo==='excesso')   return Math.max(0,parseInt(m.excesso)||0)   > 0;
+    if(tipo==='multas')    return Math.max(0,parseInt(m.multas)||0)    > 0;
+    if(tipo==='acidentes') return Math.max(0,parseInt(m.acidentes)||0) > 0;
+    return true;
+  }});
+  const cpfsFiltrados = new Set(filtrados.map(m => m.cpf));
+  document.querySelectorAll('#mDriversTableBody tr').forEach(tr => {{
+    const cpfCell = tr.querySelector('.m-cpf');
+    if(cpfCell){{
+      const cpf = cpfCell.textContent.replace('CPF: ','').trim();
+      tr.style.display = cpfsFiltrados.has(cpf) ? '' : 'none';
+    }}
+  }});
+}}
+function filtrarTabelaFilial(){{
+  const q = document.getElementById('filialSearchInput').value.toLowerCase();
+  document.querySelectorAll('#mDriversTableBody tr').forEach(tr => {{
+    tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+  }});
+}}
 
 function abrirFichaMotorista(cpf){{
   const m = motoristasDB.find(x => x.cpf === cpf);
@@ -1230,6 +1273,28 @@ function abrirFichaMotorista(cpf){{
           <div class="avatar-wrapper" onclick="dispararUploadFoto()">${{avatarHtml}}<div class="upload-hint">Alterar Foto</div></div>
           <div class="form-group" style="width:100%;margin-top:15px;"><label>Nome do Condutor</label><input type="text" id="editNome" value="${{esc(m.nome)}}"></div>
           <div class="form-group" style="width:100%;margin-top:10px;"><label>Filial Base</label><input type="text" id="editFilial" value="${{esc(m.filial)}}"></div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px;">
+            <div style="background:#fff5f5;border:1.5px solid #fca5a5;border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:12px;color:#5a6e8a;text-transform:uppercase;font-weight:700;letter-spacing:.5px;"><i class="fa-solid fa-car-burst" style="color:#dc2626;margin-right:6px"></i>Acidentes</span>
+              <span style="font-size:32px;font-weight:900;color:#dc2626;line-height:1;">${{m.acidentes||0}}</span>
+            </div>
+            <div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:12px;color:#5a6e8a;text-transform:uppercase;font-weight:700;letter-spacing:.5px;"><i class="fa-solid fa-file-circle-xmark" style="color:#d97706;margin-right:6px"></i>Multas</span>
+              <span style="font-size:32px;font-weight:900;color:#d97706;line-height:1;">${{m.multas||0}}</span>
+            </div>
+            <div style="background:#fffbeb;border:1.5px solid #fed7aa;border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:12px;color:#5a6e8a;text-transform:uppercase;font-weight:700;letter-spacing:.5px;"><i class="fa-solid fa-gauge-high" style="color:#ea580c;margin-right:6px"></i>Exc. Velocidade</span>
+              <span style="font-size:32px;font-weight:900;color:#ea580c;line-height:1;">${{m.excesso||0}}</span>
+            </div>
+            <div style="background:${{m.reciclagem==='OK'?'#f0fef4':'#fff5f5'}};border:1.5px solid ${{m.reciclagem==='OK'?'#86efac':'#fca5a5'}};border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:12px;color:#5a6e8a;text-transform:uppercase;font-weight:700;letter-spacing:.5px;"><i class="fa-solid fa-recycle" style="color:${{m.reciclagem==='OK'?'#16a34a':'#dc2626'}};margin-right:6px"></i>Reciclagem</span>
+              <span style="font-size:18px;font-weight:900;color:${{m.reciclagem==='OK'?'#16a34a':'#dc2626'}};line-height:1;">${{m.reciclagem}}</span>
+            </div>
+            <div style="background:${{m.simulador==='OK'?'#f0fef4':'#fff5f5'}};border:1.5px solid ${{m.simulador==='OK'?'#86efac':'#fca5a5'}};border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:12px;color:#5a6e8a;text-transform:uppercase;font-weight:700;letter-spacing:.5px;"><i class="fa-solid fa-car-side" style="color:${{m.simulador==='OK'?'#16a34a':'#dc2626'}};margin-right:6px"></i>Simulador</span>
+              <span style="font-size:18px;font-weight:900;color:${{m.simulador==='OK'?'#16a34a':'#dc2626'}};line-height:1;">${{m.simulador}}</span>
+            </div>
+          </div>
         </div>
         <button class="btn-delete-driver" onclick="deletarMotoristaAtual('${{m.cpf}}','${{esc(m.nome)}}')">
           <i class="fa-solid fa-trash-can"></i> Excluir Condutor permanentemente
