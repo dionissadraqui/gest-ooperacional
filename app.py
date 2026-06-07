@@ -629,23 +629,76 @@ HTML = f"""<!DOCTYPE html>
   </div>
 
   <div class="kpi-row">
-    <div class="kpi blue"   onclick="abrirKpiModal('total')"    title="Ver todos os motoristas">
-      <div class="kpi-lbl">Total Motoristas</div><div class="kpi-val" id="kpiTotal">—</div><div class="kpi-sub">Todas as filiais</div>
+   <div class="kpi blue" onclick="abrirKpiModal('total')" title="Ver todos os motoristas">
+      <div class="kpi-lbl">Total Motoristas</div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;">
+        <div class="kpi-val" id="kpiTotal">—</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;padding-bottom:4px;gap:1px;">
+          <div style="font-size:8px;color:#1a4fa0;font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.8;">cadastrados</div>
+          <div id="kpiTotalAnual" style="font-size:17px;font-weight:900;color:#1a4fa0;font-family:'Courier New',monospace;letter-spacing:1px;text-shadow:0 0 6px rgba(59,125,216,0.5);">—</div>
+        </div>
+      </div>
+      <div class="kpi-sub">Todas as filiais</div>
     </div>
-    <div class="kpi green"  onclick="abrirKpiModal('comDss')"   title="Ver motoristas com DSS ok no mês">
-      <div class="kpi-lbl">Com DSS ok</div><div class="kpi-val" id="kpiRecOk">—</div><div class="kpi-sub" id="kpiDssSub">Mês atual — 4/4 semanas</div>
+
+    <div class="kpi green" onclick="abrirKpiModal('comDss')" title="Ver motoristas com DSS ok no mês">
+      <div class="kpi-lbl">Com DSS ok</div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;">
+        <div class="kpi-val" id="kpiRecOk">—</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;padding-bottom:4px;gap:1px;">
+          <div style="font-size:8px;color:#16a34a;font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.8;">sessões/ano</div>
+          <div id="kpiRecOkAnual" style="font-size:17px;font-weight:900;color:#16a34a;font-family:'Courier New',monospace;letter-spacing:1px;text-shadow:0 0 6px rgba(34,204,136,0.5);">—</div>
+        </div>
+      </div>
+      <div class="kpi-sub" id="kpiDssSub">Mês atual — 4/4 semanas</div>
     </div>
-    <div class="kpi amber"  onclick="abrirKpiModal('semDss')"   title="Ver motoristas pendentes no mês">
-      <div class="kpi-lbl">Pendentes DSS</div><div class="kpi-val" id="kpiSimOk">—</div><div class="kpi-sub" id="kpiPendSub">Mês atual — menos de 4</div>
+
+    <div class="kpi amber" onclick="abrirKpiModal('semDss')" title="Ver motoristas pendentes no mês">
+      <div class="kpi-lbl">Pendentes DSS</div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;">
+        <div class="kpi-val" id="kpiSimOk">—</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;padding-bottom:4px;gap:1px;">
+          <div style="font-size:8px;color:#d97706;font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.8;">em falta/ano</div>
+          <div id="kpiPendAnual" style="font-size:17px;font-weight:900;color:#d97706;font-family:'Courier New',monospace;letter-spacing:1px;text-shadow:0 0 6px rgba(255,170,0,0.5);">—</div>
+        </div>
+      </div>
+      <div class="kpi-sub" id="kpiPendSub">Mês atual — menos de 4</div>
     </div>
-    <div class="kpi red"    onclick="abrirKpiModal('excesso')"  title="Ver motoristas com excesso de velocidade">
-      <div class="kpi-lbl">Excesso Velocidade</div><div class="kpi-val" id="kpiExcesso">—</div><div class="kpi-sub">Total Ocorrências</div>
+
+    <div class="kpi red" onclick="abrirKpiModal('excesso')" title="Ver motoristas com excesso de velocidade">
+      <div class="kpi-lbl">Excesso Velocidade</div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;">
+        <div class="kpi-val" id="kpiExcesso">—</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;padding-bottom:4px;gap:1px;">
+          <div style="font-size:8px;color:#dc2626;font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.8;">motoristas</div>
+          <div id="kpiExcessoMot" style="font-size:17px;font-weight:900;color:#dc2626;font-family:'Courier New',monospace;letter-spacing:1px;text-shadow:0 0 6px rgba(255,68,68,0.5);">—</div>
+        </div>
+      </div>
+      <div class="kpi-sub">Total Ocorrências</div>
     </div>
-    <div class="kpi red"    onclick="abrirKpiModal('multas')"   title="Ver motoristas com multas">
-      <div class="kpi-lbl">Total Multas</div><div class="kpi-val" id="kpiMultas">—</div><div class="kpi-sub">Total Ocorrências</div>
+
+    <div class="kpi red" onclick="abrirKpiModal('multas')" title="Ver motoristas com multas">
+      <div class="kpi-lbl">Total Multas</div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;">
+        <div class="kpi-val" id="kpiMultas">—</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;padding-bottom:4px;gap:1px;">
+          <div style="font-size:8px;color:#dc2626;font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.8;">motoristas</div>
+          <div id="kpiMultasMot" style="font-size:17px;font-weight:900;color:#dc2626;font-family:'Courier New',monospace;letter-spacing:1px;text-shadow:0 0 6px rgba(255,68,68,0.5);">—</div>
+        </div>
+      </div>
+      <div class="kpi-sub">Total Ocorrências</div>
     </div>
-    <div class="kpi red"    onclick="abrirKpiModal('acidentes')" title="Ver motoristas com acidentes">
-      <div class="kpi-lbl">Total Acidentes</div><div class="kpi-val" id="kpiAcidentes">—</div><div class="kpi-sub">Total Ocorrências</div>
+
+    <div class="kpi red" onclick="abrirKpiModal('acidentes')" title="Ver motoristas com acidentes">
+      <div class="kpi-lbl">Total Acidentes</div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;">
+        <div class="kpi-val" id="kpiAcidentes">—</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;padding-bottom:4px;gap:1px;">
+          <div style="font-size:8px;color:#dc2626;font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.8;">motoristas</div>
+          <div id="kpiAcidentesMot" style="font-size:17px;font-weight:900;color:#dc2626;font-family:'Courier New',monospace;letter-spacing:1px;text-shadow:0 0 6px rgba(255,68,68,0.5);">—</div>
+        </div>
+      </div>
+      <div class="kpi-sub">Total Ocorrências</div>
     </div>
   </div>
 
@@ -1038,6 +1091,25 @@ function atualizarDashboardCompleto(){{
   if(subDss)  subDss.textContent  = _mesLabel + ' — 4/4 semanas';
   if(subPend) subPend.textContent = _mesLabel + ' — menos de 4';
   document.getElementById('macroPctDss').textContent = pct;
+
+  const totalDssAnual = motoristasDB.reduce((acc, m) => {{
+    MESES.forEach(mes => {{
+      if(m.dssAnual && m.dssAnual[mes]) acc += m.dssAnual[mes].filter(Boolean).length;
+    }});
+    return acc;
+  }}, 0);
+  const totalSessoesAnual = totalM * MESES.length * 4;
+  const motExcesso = motoristasDB.filter(m => Math.max(0,parseInt(m.excesso)||0) > 0).length;
+  const motMultas  = motoristasDB.filter(m => Math.max(0,parseInt(m.multas)||0)  > 0).length;
+  const motAcident = motoristasDB.filter(m => Math.max(0,parseInt(m.acidentes)||0) > 0).length;
+  const _s = (id,v) => {{ const e=document.getElementById(id); if(e) e.textContent=v; }};
+  _s('kpiTotalAnual',   totalM);
+  _s('kpiRecOkAnual',   totalDssAnual);
+  _s('kpiPendAnual',    totalSessoesAnual - totalDssAnual);
+  _s('kpiExcessoMot',   motExcesso);
+  _s('kpiMultasMot',    motMultas);
+  _s('kpiAcidentesMot', motAcident);
+
   renderizarGridFiliais(filiais);
   renderizarGraficos(filiais);
 }}
