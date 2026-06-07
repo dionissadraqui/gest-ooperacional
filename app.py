@@ -64,7 +64,8 @@ SCOPES = [
 
 # ─── Google Sheets helpers ────────────────────────────────────────────────────
 def get_sheet():
-    creds = Credentials.from_service_account_file(str(CREDENTIALS_PATH), scopes=SCOPES)
+    creds_dict = dict(st.secrets["gcp_service_account"])
+    creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
     gc = gspread.authorize(creds)
     sh = gc.open_by_key(SHEET_ID)
     try:
@@ -73,7 +74,6 @@ def get_sheet():
         ws = sh.add_worksheet(title=SHEET_NAME, rows=1000, cols=len(COLUNAS) + 5)
         ws.append_row(COLUNAS)
     return ws
-
 
 def ler_todos_motoristas():
     ws = get_sheet()
