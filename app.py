@@ -648,7 +648,7 @@ HTML = f"""<!DOCTYPE html>
 <div id="splash-screen">
   <div id="splash-bg"></div>
   <div class="splash-card">
-    <div class="splash-logo-txt">LUFT<span> LOGISTICS</span></div>
+    <div class="splash-logo-txt">Gestão<span> Operacional</span></div>
     <div class="splash-sub">Sistema de Controle de Motoristas</div>
 
     <!-- TELA DE LOGIN -->
