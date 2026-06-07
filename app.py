@@ -268,6 +268,8 @@ st.markdown("""
   .block-container { padding: 0 !important; max-width: 100% !important; }
   [data-testid="stAppViewContainer"] { padding: 0 !important; }
   [data-testid="stVerticalBlock"] { gap: 0 !important; }
+  iframe { height: 100vh !important; min-height: 100vh !important; }
+  [data-testid="stIFrame"] { height: 100vh !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -646,18 +648,40 @@ HTML = f"""<!DOCTYPE html>
 <div id="splash-screen">
   <div id="splash-bg"></div>
   <div class="splash-card">
-    <div class="splash-logo-txt">LUFT<span> LOGISTICS</span></div>
+    <div class="splash-logo-txt">Gestão<span> Operacional</span></div>
     <div class="splash-sub">Sistema de Controle de Motoristas</div>
-    <div class="splash-label"><i class="fa-solid fa-database" style="margin-right:6px"></i>Conectando ao Google Sheets</div>
-    <div class="splash-drop-area" id="splashDropArea" style="cursor:default;pointer-events:none;">
-      <div class="splash-drop-icon"><i class="fa-brands fa-google" style="color:#34a853"></i></div>
-      <div class="splash-drop-txt">
-        <strong>Google Sheets</strong><br>
-        Carregando base de dados...
+
+    <!-- TELA DE LOGIN -->
+    <div id="loginBox">
+      <div class="splash-label" style="margin-bottom:18px;"><i class="fa-solid fa-lock" style="margin-right:6px"></i>Acesso Restrito</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
+        <input type="text" id="loginUser" placeholder="Usuário"
+          style="background:rgba(255,255,255,0.08);border:1.5px solid rgba(59,125,216,0.4);color:#fff;padding:10px 14px;border-radius:8px;font-size:14px;outline:none;letter-spacing:.5px;"
+          onkeydown="if(event.key==='Enter') tentarLogin()">
+        <input type="password" id="loginPass" placeholder="Senha"
+          style="background:rgba(255,255,255,0.08);border:1.5px solid rgba(59,125,216,0.4);color:#fff;padding:10px 14px;border-radius:8px;font-size:14px;outline:none;letter-spacing:.5px;"
+          onkeydown="if(event.key==='Enter') tentarLogin()">
       </div>
+      <button onclick="tentarLogin()"
+        style="width:100%;background:#3b7dd8;color:#fff;border:none;padding:11px;border-radius:8px;font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;">
+        <i class="fa-solid fa-right-to-bracket" style="margin-right:6px"></i>Entrar
+      </button>
+      <div id="loginErro" style="color:#ff4444;font-size:12px;margin-top:10px;min-height:16px;font-weight:600;"></div>
     </div>
-    <div class="splash-progress" id="splashProgress"><div class="splash-progress-bar" id="splashProgressBar"></div></div>
-    <div class="splash-status" id="splashStatus">Aguardando conexão...</div>
+
+    <!-- TELA DE CARREGAMENTO (oculta até login ok) -->
+    <div id="loadingBox" style="display:none;">
+      <div class="splash-label"><i class="fa-solid fa-database" style="margin-right:6px"></i>Conectando ao Google Sheets</div>
+      <div class="splash-drop-area" style="cursor:default;pointer-events:none;margin-top:14px;">
+        <div class="splash-drop-icon"><i class="fa-brands fa-google" style="color:#34a853"></i></div>
+        <div class="splash-drop-txt">
+          <strong>Google Sheets</strong><br>
+          Carregando base de dados...
+        </div>
+      </div>
+      <div class="splash-progress" id="splashProgress"><div class="splash-progress-bar" id="splashProgressBar"></div></div>
+      <div class="splash-status" id="splashStatus">Aguardando conexão...</div>
+    </div>
   </div>
 </div>
 
@@ -1367,6 +1391,9 @@ function abrirFichaMotorista(cpf){{
             </div>
           </div>
         </div>
+        <button onclick="gerarFichaPdf('${{m.cpf}}')" style="background:#fff0f8;color:#1a4fa0;border:1px solid #b0c8e8;padding:8px;border-radius:7px;font-size:10px;font-weight:700;text-transform:uppercase;cursor:pointer;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:6px;width:100%;transition:.18s;" onmouseover="this.style.background='#1a4fa0';this.style.color='#fff'" onmouseout="this.style.background='#fff0f8';this.style.color='#1a4fa0'">
+          <i class="fa-solid fa-file-pdf"></i> Baixar Ficha em PDF
+        </button>
         <button class="btn-delete-driver" onclick="deletarMotoristaAtual('${{m.cpf}}','${{esc(m.nome)}}')">
           <i class="fa-solid fa-trash-can"></i> Excluir Condutor permanentemente
         </button>
@@ -1547,6 +1574,182 @@ function fecharJanelaDriver(){{
   document.getElementById('btnVoltarFicha').style.display = 'none';
 }}
 
+// ── Ficha Individual PDF ──
+function gerarFichaPdf(cpf){{
+  const m = motoristasDB.find(x => x.cpf === cpf);
+  if(!m) return;
+  const now    = new Date();
+  const dtStr  = now.toLocaleDateString('pt-BR');
+  const hrStr  = now.toLocaleTimeString('pt-BR', {{hour:'2-digit', minute:'2-digit'}});
+  const esc    = s => (s||'—').replace(/</g,'&lt;');
+  const fotoHtml = m.foto
+    ? `<img src="${{m.foto}}" style="width:100px;height:100px;object-fit:cover;border-radius:6px;border:2px solid #c4d0e4;">`
+    : `<div style="width:100px;height:100px;border-radius:6px;border:2px dashed #c4d0e4;display:flex;align-items:center;justify-content:center;background:#f0f4fa;color:#9aaabb;font-size:11px;text-align:center;">Sem<br>Foto</div>`;
+
+  const dssLinhas = Object.entries(m.dssAnual||{{}}).map(([mes, sems])=>{{
+    const boxes = sems.map((ok,i)=>`<td style="text-align:center;padding:4px;border:1px solid #dde6f4;background:${{ok?'#dcfce7':'#fff5f5'}};color:${{ok?'#16a34a':'#dc2626'}};font-weight:800;font-size:11px;">${{ok?'✓':'✗'}}</td>`).join('');
+    return `<tr><td style="padding:4px 8px;border:1px solid #dde6f4;font-size:11px;font-weight:700;color:#1a3a6b;">${{mes}}</td>${{boxes}}</tr>`;
+  }}).join('');
+
+  const html = `<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8">
+<title>LUFT LOGISTICS — Ficha | ${{m.nome}}</title>
+<style>
+  *{{box-sizing:border-box;margin:0;padding:0}}
+  body{{font-family:'Segoe UI',Arial,sans-serif;background:#fff;color:#1a2a44;padding:28px 32px;font-size:12px}}
+  .header{{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1a3a6b;padding-bottom:12px;margin-bottom:16px}}
+  .brand-title{{font-size:20px;font-weight:900;color:#1a3a6b}}
+  .brand-title span{{color:#22cc88}}
+  .brand-sub{{font-size:10px;color:#5a6e8a;letter-spacing:1px;text-transform:uppercase;margin-top:3px}}
+  .doc-info{{text-align:right;font-size:10px;color:#5a6e8a}}
+  .doc-info strong{{display:block;font-size:13px;color:#1a3a6b;font-weight:800}}
+  .section{{border:1.5px solid #dde6f4;border-radius:8px;margin-bottom:14px;overflow:hidden}}
+  .section-head{{background:#1a3a6b;color:#fff;font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;padding:6px 12px}}
+  .section-body{{padding:12px}}
+  .profile-row{{display:flex;gap:18px;align-items:flex-start}}
+  .info-grid{{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;flex:1}}
+  .info-item label{{font-size:9px;color:#5a6e8a;text-transform:uppercase;font-weight:700;letter-spacing:.5px;display:block;margin-bottom:2px}}
+  .info-item span{{font-size:13px;font-weight:700;color:#1a2a44}}
+  .badge{{display:inline-block;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:800}}
+  .badge-ok{{background:#dcfce7;color:#16a34a;border:1px solid #86efac}}
+  .badge-pend{{background:#fef9c3;color:#d97706;border:1px solid #fde68a}}
+  .badge-red{{background:#fee2e2;color:#dc2626;border:1px solid #fca5a5}}
+  .kpi-row{{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}}
+  .kpi-box{{border-radius:6px;padding:10px 12px;text-align:center;border:1.5px solid}}
+  .kpi-box label{{font-size:9px;text-transform:uppercase;font-weight:700;letter-spacing:.5px;display:block;margin-bottom:4px}}
+  .kpi-box span{{font-size:26px;font-weight:900;line-height:1}}
+  .kpi-acid{{border-color:#fca5a5;background:#fff5f5}}.kpi-acid span{{color:#dc2626}}
+  .kpi-mul{{border-color:#fde68a;background:#fffbeb}}.kpi-mul span{{color:#d97706}}
+  .kpi-vel{{border-color:#fed7aa;background:#fff7ed}}.kpi-vel span{{color:#ea580c}}
+  table.dss{{width:100%;border-collapse:collapse}}
+  table.dss th{{background:#eef3fb;color:#1a4fa0;font-size:10px;font-weight:800;text-transform:uppercase;padding:5px 8px;border:1px solid #dde6f4;text-align:center}}
+  .assinatura-row{{display:flex;gap:32px;margin-top:10px;align-items:flex-end}}
+  .assinatura-box{{flex:1}}
+  .assinatura-box .lbl{{font-size:8px;color:#5a6e8a;text-transform:uppercase;font-weight:700;letter-spacing:.5px;margin-bottom:20px;display:block}}
+  .assinatura-box .linha{{border:none;border-bottom:1.5px solid #1a3a6b;margin-bottom:5px}}
+  .assinatura-box .sublbl{{font-size:8px;color:#1a3a6b;font-weight:700}}
+  .footer{{border-top:1px solid #dde6f4;margin-top:10px;padding-top:6px;display:flex;justify-content:space-between;font-size:8px;color:#9aaabb}}
+  @media print{{body{{padding:10px 16px}} .no-print{{display:none}} .section{{margin-bottom:8px}} .section-body{{padding:8px 10px}} .kpi-row{{gap:6px}} .kpi-box{{padding:6px 8px}} .kpi-box span{{font-size:20px}} table.dss td,table.dss th{{padding:3px 6px;font-size:10px}}}}
+</style></head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="brand-title">LUFT<span style="color:#22cc88"> LOGISTICS</span></div>
+    <div class="brand-sub" style="color:#1a3a6b;font-weight:700;font-size:11px;margin-top:2px;letter-spacing:.5px;">Sistema de Controle de Motoristas</div>
+    <div class="brand-sub">Ficha Individual do Condutor — Histórico & Compliance</div>
+  </div>
+  <div class="doc-info">
+    <strong>Ficha do Condutor</strong>
+    Emitido em: ${{dtStr}} às ${{hrStr}}<br>
+    CPF: ${{esc(m.cpf)}}
+  </div>
+</div>
+
+<!-- IDENTIFICAÇÃO -->
+<div class="section">
+  <div class="section-head">👤 Identificação do Condutor</div>
+  <div class="section-body">
+    <div class="profile-row">
+      <div style="flex-shrink:0">${{fotoHtml}}</div>
+      <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:10px 24px;">
+        <div class="info-item" style="grid-column:1/-1;border-bottom:1px solid #e8eef8;padding-bottom:8px;margin-bottom:4px;">
+          <label>Nome Completo</label>
+          <span style="font-size:17px;font-weight:900;color:#1a3a6b;">${{esc(m.nome)}}</span>
+        </div>
+        <div class="info-item"><label>CPF</label><span style="font-family:monospace">${{esc(m.cpf)}}</span></div>
+        <div class="info-item"><label>Filial</label><span>${{esc(m.filial)}}</span></div>
+        <div class="info-item"><label>Admissão</label><span>${{m.admissao ? new Date(m.admissao+'T00:00:00').toLocaleDateString('pt-BR') : '—'}}</span></div>
+        <div class="info-item"><label>Telefone</label><span>${{esc(m.telefone)}}</span></div>
+        <div class="info-item"><label>E-mail</label><span>${{esc(m.email)}}</span></div>
+        <div class="info-item"><label>CNH Nº</label><span style="font-family:monospace">${{esc(m.cnh)}}</span></div>
+        <div class="info-item"><label>Validade CNH</label><span>${{m.validadeCnh ? new Date(m.validadeCnh+'T00:00:00').toLocaleDateString('pt-BR') : '—'}}</span></div>
+        <div class="info-item" style="grid-column:1/-1;display:flex;gap:20px;padding-top:6px;border-top:1px solid #e8eef8;margin-top:2px;">
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <label>Reciclagem</label>
+            <span class="badge ${{m.reciclagem==='OK'?'badge-ok':'badge-pend'}}">${{m.reciclagem}}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <label>Simulador</label>
+            <span class="badge ${{m.simulador==='OK'?'badge-ok':'badge-pend'}}">${{m.simulador}}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- INDICADORES -->
+<div class="section">
+  <div class="section-head"><i>🛡</i> Indicadores de Segurança</div>
+  <div class="section-body">
+    <div class="kpi-row">
+      <div class="kpi-box kpi-acid"><label>Acidentes</label><span>${{m.acidentes||0}}</span></div>
+      <div class="kpi-box kpi-mul"><label>Multas</label><span>${{m.multas||0}}</span></div>
+      <div class="kpi-box kpi-vel"><label>Exc. Velocidade</label><span>${{m.excesso||0}}</span></div>
+    </div>
+    ${{(m.obsAcidente||m.obsMultas||m.obsGerais||m.obsReciclagem||m.obsSimulador) ? `
+    <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      ${{m.obsAcidente ? `<div style="background:#fff5f5;border:1px solid #fca5a5;border-radius:5px;padding:7px 10px;"><span style="font-size:9px;color:#dc2626;font-weight:700;text-transform:uppercase;">Obs. Acidentes</span><p style="font-size:11px;margin-top:3px;color:#1a2a44;">${{esc(m.obsAcidente)}}</p></div>` : ''}}
+      ${{m.obsMultas  ? `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:5px;padding:7px 10px;"><span style="font-size:9px;color:#d97706;font-weight:700;text-transform:uppercase;">Obs. Multas</span><p style="font-size:11px;margin-top:3px;color:#1a2a44;">${{esc(m.obsMultas)}}</p></div>` : ''}}
+      ${{m.obsGerais  ? `<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:5px;padding:7px 10px;"><span style="font-size:9px;color:#ea580c;font-weight:700;text-transform:uppercase;">Obs. Velocidade</span><p style="font-size:11px;margin-top:3px;color:#1a2a44;">${{esc(m.obsGerais)}}</p></div>` : ''}}
+      ${{m.obsReciclagem ? `<div style="background:#f0fef4;border:1px solid #86efac;border-radius:5px;padding:7px 10px;"><span style="font-size:9px;color:#16a34a;font-weight:700;text-transform:uppercase;">Obs. Reciclagem</span><p style="font-size:11px;margin-top:3px;color:#1a2a44;">${{esc(m.obsReciclagem)}}</p></div>` : ''}}
+      ${{m.obsSimulador ? `<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:5px;padding:7px 10px;"><span style="font-size:9px;color:#1a4fa0;font-weight:700;text-transform:uppercase;">Obs. Simulador</span><p style="font-size:11px;margin-top:3px;color:#1a2a44;">${{esc(m.obsSimulador)}}</p></div>` : ''}}
+    </div>` : ''}}
+  </div>
+</div>
+
+<!-- DSS -->
+<div class="section">
+  <div class="section-head"><i>📅</i> Controle Semanal DSS — Ano Vigente</div>
+  <div class="section-body">
+    <table class="dss">
+      <thead><tr><th style="text-align:left;padding:5px 8px;">Mês</th><th>1ª Sem</th><th>2ª Sem</th><th>3ª Sem</th><th>4ª Sem</th></tr></thead>
+      <tbody>${{dssLinhas}}</tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ASSINATURA -->
+<div style="border:1.5px solid #dde6f4;border-radius:8px;margin-bottom:14px;overflow:hidden;">
+  <div style="background:#1a3a6b;color:#fff;font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;padding:6px 12px;">✍ Declaração e Assinatura</div>
+  <div style="padding:14px 16px;">
+    <p style="font-size:9px;color:#5a6e8a;margin-bottom:16px;line-height:1.6;font-style:italic;border-left:3px solid #1a3a6b;padding-left:8px;">
+      Declaro que as informações contidas nesta ficha estão corretas e que estou ciente das normas de segurança e conformidade operacional da empresa.
+    </p>
+    <div style="display:flex;gap:32px;align-items:flex-end;margin-top:10px;">
+      <div style="flex:2;display:flex;flex-direction:column;">
+        <span style="font-size:8px;color:#5a6e8a;text-transform:uppercase;font-weight:700;letter-spacing:.5px;margin-bottom:28px;display:block;">Assinatura do Condutor</span>
+        <div style="border-bottom:1.5px solid #1a3a6b;margin-bottom:5px;"></div>
+        <div style="font-size:9px;font-weight:700;color:#1a3a6b;">${{esc(m.nome)}}</div>
+        <div style="font-size:8px;color:#5a6e8a;">CPF: ${{esc(m.cpf)}}</div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;">
+        <span style="font-size:8px;color:#5a6e8a;text-transform:uppercase;font-weight:700;letter-spacing:.5px;margin-bottom:28px;display:block;">Data</span>
+        <div style="border-bottom:1.5px solid #1a3a6b;margin-bottom:5px;"></div>
+        
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;">
+        <span style="font-size:8px;color:#5a6e8a;text-transform:uppercase;font-weight:700;letter-spacing:.5px;margin-bottom:28px;display:block;">Local / Filial</span>
+        <div style="border-bottom:1.5px solid #1a3a6b;margin-bottom:5px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <span><strong style="color:#1a3a6b;">LUFT LOGISTICS</strong> — Sistema de Controle de Motoristas</span>
+  <span>Documento gerado em ${{dtStr}} às ${{hrStr}}</span>
+</div>
+
+</body></html>`;
+
+  const blob = new Blob([html], {{type:'text/html;charset=utf-8'}});
+  const url  = URL.createObjectURL(blob);
+  const win  = window.open(url, '_blank');
+  if(win) win.onload = () => {{ win.focus(); win.print(); }};
+}}
+
 // ── Relatório PDF Pendentes ──
 function gerarRelatorioPdfPendentes(){{
   const mes   = kpiMesAtual || mesCorrente();
@@ -1620,42 +1823,62 @@ function _gerarRelatorio(mes, lista, realizado){{
   if(win) win.onload = () => {{ win.focus(); win.print(); }};
 }}
 
-// ── Inicialização ──
+// ── Login + Inicialização ──
+const CREDENCIAIS = {{ usuario: 'luft123', senha: 'luft321' }};
+
+function tentarLogin(){{
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value.trim();
+  const erro = document.getElementById('loginErro');
+  if(u === CREDENCIAIS.usuario && p === CREDENCIAIS.senha){{
+    document.getElementById('loginBox').style.display  = 'none';
+    document.getElementById('loadingBox').style.display = 'block';
+    inicializar();
+  }} else {{
+    erro.textContent = 'Usuário ou senha incorretos.';
+    document.getElementById('loginPass').value = '';
+    document.getElementById('loginPass').focus();
+    setTimeout(() => {{ erro.textContent = ''; }}, 3000);
+  }}
+}}
+
 (function(){{
-  const splash    = document.getElementById('splash-screen');
-  const status    = document.getElementById('splashStatus');
-  const progress  = document.getElementById('splashProgress');
-  const progressB = document.getElementById('splashProgressBar');
-
-  function setStatus(msg, erro){{
-    status.textContent = msg;
-    status.className   = 'splash-status' + (erro ? ' erro' : '');
-  }}
-
-  function fecharSplashECarregar(total){{
-    progressB.style.width = '100%';
-    setStatus(`✓ Google Sheets — ${{total}} motorista(s) encontrado(s)`, false);
-    setTimeout(()=>{{
-      splash.style.transition = 'opacity .5s';
-      splash.style.opacity    = '0';
-      setTimeout(()=>{{ splash.style.display='none'; atualizarDashboardCompleto(); }}, 500);
-    }}, 900);
-  }}
-  async function inicializar(){{
-    progress.style.display = 'block';
-    progressB.style.width  = '0%';
-    setStatus('Conectando ao Google Sheets...', false);
-    await new Promise(r => setTimeout(r, 400));
-    progressB.style.width  = '40%';
-    setStatus('Carregando motoristas...', false);
-    await new Promise(r => setTimeout(r, 600));
-    progressB.style.width  = '80%';
-    await new Promise(r => setTimeout(r, 400));
-    fecharSplashECarregar(motoristasDB.length);
-  }}
-
-  inicializar();
+  // foco automático no campo usuário
+  setTimeout(() => {{ document.getElementById('loginUser').focus(); }}, 200);
 }})();
+
+const splash    = document.getElementById('splash-screen');
+const status    = document.getElementById('splashStatus');
+const progress  = document.getElementById('splashProgress');
+const progressB = document.getElementById('splashProgressBar');
+
+function setStatus(msg, erro){{
+  status.textContent = msg;
+  status.className   = 'splash-status' + (erro ? ' erro' : '');
+}}
+
+function fecharSplashECarregar(total){{
+  progressB.style.width = '100%';
+  setStatus(`✓ Google Sheets — ${{total}} motorista(s) encontrado(s)`, false);
+  setTimeout(()=>{{
+    splash.style.transition = 'opacity .5s';
+    splash.style.opacity    = '0';
+    setTimeout(()=>{{ splash.style.display='none'; atualizarDashboardCompleto(); }}, 500);
+  }}, 900);
+}}
+
+async function inicializar(){{
+  progress.style.display = 'block';
+  progressB.style.width  = '0%';
+  setStatus('Conectando ao Google Sheets...', false);
+  await new Promise(r => setTimeout(r, 400));
+  progressB.style.width  = '40%';
+  setStatus('Carregando motoristas...', false);
+  await new Promise(r => setTimeout(r, 600));
+  progressB.style.width  = '80%';
+  await new Promise(r => setTimeout(r, 400));
+  fecharSplashECarregar(motoristasDB.length);
+}}
 </script>
 </body>
 </html>
@@ -1664,4 +1887,4 @@ function _gerarRelatorio(mes, lista, realizado){{
 HTML = HTML.replace("__ANO__", str(datetime.now().year))
 
 # ─── Renderiza o HTML no Streamlit ────────────────────────────────────────────
-components.html(HTML, height=1100, scrolling=True)
+components.html(HTML, height=800, scrolling=True)
