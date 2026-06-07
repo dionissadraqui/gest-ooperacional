@@ -1757,21 +1757,18 @@ async function inicializar(){{
 HTML = HTML.replace("__ANO__", str(datetime.now().year))
 
 # ─── Renderiza o HTML no Streamlit ────────────────────────────────────────────
-components.html(HTML, height=800, scrolling=True)
-
-# ─── Recebe ação do JS e salva no Google Sheets ───────────────────────────────
+# ─── Recebe ação do JS e salva ANTES de renderizar ───────────────────────────
 params = st.query_params
-if "action" in params:
-    action  = params.get("action", "")
+if params.get("action") == "salvar_tudo":
     payload = params.get("payload", "")
     try:
         dados = json.loads(payload) if payload else {}
-    except Exception:
-        dados = {}
-    if action == "salvar_tudo" and "motoristas" in dados:
-        try:
+        if "motoristas" in dados:
             salvar_todos_motoristas(dados["motoristas"])
-        except Exception as e:
-            st.error(f"Erro ao salvar: {e}")
-    st.query_params.clear()
-    st.rerun()
+            st.query_params.clear()
+            st.rerun()
+    except Exception as e:
+        st.error(f"Erro ao salvar: {e}")
+        st.query_params.clear()
+
+st.markdown(HTML, unsafe_allow_html=True)
