@@ -301,7 +301,7 @@ HTML = f"""<!DOCTYPE html>
 #splash-bg{{
   position:absolute;top:0;left:0;width:100%;height:100%;
   {_LOGO_CSS}
-  filter:brightness(0.55);
+  filter:brightness(1);
 }}
 .splash-card{{
   position:relative;z-index:2;
@@ -574,6 +574,70 @@ HTML = f"""<!DOCTYPE html>
 .empty-state{{text-align:center;padding:40px;color:#9aaabb}}
 .empty-state i{{font-size:36px;margin-bottom:12px;color:#c4d0e4}}
 .empty-state p{{font-size:15px}}
+
+/* ── RESPONSIVO ── */
+@media (max-width:1024px){{
+  .kpi-row{{grid-template-columns:repeat(3,1fr)}}
+  .filial-grid{{grid-template-columns:repeat(2,1fr)}}
+  .driver-profile-grid{{grid-template-columns:1fr;padding:12px}}
+  .profile-card-left{{max-width:100%}}
+  .meta-grid{{grid-template-columns:repeat(2,1fr)}}
+  .dss-matrix-container{{grid-template-columns:repeat(3,1fr)}}
+}}
+
+@media (max-width:768px){{
+  .top-bar{{flex-wrap:wrap;gap:8px;padding:8px 10px}}
+  .luft-name{{font-size:20px}}
+  .pct-val{{font-size:22px}}
+  .kpi-row{{grid-template-columns:repeat(2,1fr);gap:8px}}
+  .kpi-val{{font-size:36px}}
+  .kpi{{padding:12px 14px}}
+  .content{{padding:8px 8px}}
+  .panel{{padding:8px}}
+  .filial-grid{{grid-template-columns:1fr}}
+  .fc-count{{font-size:36px}}
+  .modal-split{{grid-template-columns:1fr;grid-template-rows:auto 1fr}}
+  .modal-sidebar{{flex-direction:row;flex-wrap:wrap;gap:6px}}
+  .modal-kpi-card{{flex:1;min-width:120px;padding:8px}}
+  .m-val{{font-size:22px}}
+  .modal-box{{padding:10px;gap:8px}}
+  .driver-profile-grid{{grid-template-columns:1fr;padding:8px;gap:10px}}
+  .profile-details-right{{gap:8px}}
+  .meta-grid{{grid-template-columns:1fr}}
+  .dss-matrix-container{{grid-template-columns:repeat(2,1fr)}}
+  .kpi-cards-grid{{grid-template-columns:1fr;padding:10px 12px;gap:10px}}
+  .kpi-modal-overlay{{padding:4px}}
+  .kpi-modal-head{{padding:10px 12px}}
+  .kpi-modal-label{{font-size:13px}}
+  .admin-panel-body.open{{max-height:420px}}
+  .form-grid{{grid-template-columns:1fr 1fr;gap:8px}}
+  .charts-row{{grid-template-columns:1fr!important}}
+}}
+
+@media (max-width:480px){{
+  .kpi-row{{grid-template-columns:repeat(2,1fr);gap:6px}}
+  .kpi-val{{font-size:30px}}
+  .kpi-lbl{{font-size:10px;letter-spacing:.5px}}
+  .kpi-sub{{font-size:10px}}
+  .luft-name{{font-size:16px}}
+  .brand-logo{{padding:4px 8px}}
+  .pct-box{{padding:4px 8px}}
+  .pct-val{{font-size:18px}}
+  .pct-lbl{{font-size:9px}}
+  .modal-title{{font-size:13px}}
+  .modal-sidebar{{flex-direction:column}}
+  .modal-kpi-card{{min-width:unset}}
+  .dss-matrix-container{{grid-template-columns:repeat(2,1fr);gap:4px}}
+  .month-dss-box{{padding:5px}}
+  .month-name-lbl{{font-size:10px}}
+  .week-checkbox-label{{font-size:10px}}
+  .form-grid{{grid-template-columns:1fr;gap:6px}}
+  .m-table{{font-size:12px}}
+  .m-table th,.m-table td{{padding:8px 8px}}
+  .fc-name{{font-size:16px}}
+  .fc-count{{font-size:28px}}
+  .sbar-lbl{{font-size:11px;width:52px}}
+}}
 </style>
 </head>
 <body class="db">
@@ -668,7 +732,7 @@ HTML = f"""<!DOCTYPE html>
     </div>
   </div>
 
-  <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:12px;">
+  <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:12px;" class="charts-row">
     <div class="panel">
       <div class="sec-title">DSS por sessão — __ANO__ (registros realizados)</div>
       <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;align-items:center;">
