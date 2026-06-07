@@ -233,11 +233,17 @@ def iniciar_flask():
 
 
 # Inicia Flask apenas uma vez (Streamlit recarrega o script em re-runs)
-if "flask_started" not in st.session_state:
-    t = threading.Thread(target=iniciar_flask, daemon=True)
-    t.start()
-    st.session_state["flask_started"] = True
+import socket
 
+def porta_livre(porta):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(('localhost', porta)) != 0
+
+if "flask_started" not in st.session_state:
+    if porta_livre(API_PORT):
+        t = threading.Thread(target=iniciar_flask, daemon=True)
+        t.start()
+    st.session_state["flask_started"] = True
 
 # ─── Logo em base64 ───────────────────────────────────────────────────────────
 def logo_b64():
