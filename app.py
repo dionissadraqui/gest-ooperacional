@@ -118,9 +118,12 @@ def salvar_todos_motoristas(lista):
     ws = get_sheet()
     all_rows = []
     for m in lista:
+        foto = m.get("foto", "")
+        if len(foto) > 45000:
+            foto = ""          # foto grande demais para o Sheets — descarta
         row_data = [
             m.get("cpf", ""), m.get("nome", ""), m.get("filial", ""),
-            m.get("telefone", ""), m.get("email", ""), m.get("foto", ""),
+            m.get("telefone", ""), m.get("email", ""), foto,
             m.get("reciclagem", "PENDENTE"), m.get("simulador", "PENDENTE"),
             m.get("excesso", 0), m.get("multas", 0), m.get("acidentes", 0),
             m.get("obsAcidente", ""), m.get("obsMultas", ""), m.get("obsGerais", ""),
@@ -135,9 +138,9 @@ def salvar_todos_motoristas(lista):
         all_rows.append(row_data)
     existing = ws.get_all_values()
     if len(existing) > 1:
-        ws.delete_rows(2, len(existing))
+        ws.delete_rows(2, len(existing))  # apaga só dados, não o cabeçalho
     if all_rows:
-        ws.append_rows(all_rows, value_input_option="USER_ENTERED")
+        ws.append_rows(all_rows, value_input_option="RAW")  # RAW evita parsing que quebra base64
 
 
 # ─── Flask API ────────────────────────────────────────────────────────────────
