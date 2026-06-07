@@ -1419,11 +1419,14 @@ function salvarTudoNoSheets(){{
 
 function _dispararSalvamento(action, dados){{
   try{{
-    const payload = encodeURIComponent(JSON.stringify(dados));
-    const base = window.parent.location.href.split('?')[0];
-    window.parent.location.href = base + '?action=' + action + '&payload=' + payload;
+    const semFoto = dados.motoristas
+      ? {{ ...dados, motoristas: dados.motoristas.map(m => ({{ ...m, foto: '' }})) }}
+      : dados;
+    const payload = encodeURIComponent(JSON.stringify(semFoto));
+    const base = window.location.href.split('?')[0];
+    window.location.href = base + '?action=' + action + '&payload=' + payload;
   }} catch(e){{
-    toast('Erro ao comunicar com o servidor.', 'erro');
+    toast('Erro ao comunicar: ' + e.message, 'erro');
   }}
 }}
 
