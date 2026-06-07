@@ -268,6 +268,8 @@ st.markdown("""
   .block-container { padding: 0 !important; max-width: 100% !important; }
   [data-testid="stAppViewContainer"] { padding: 0 !important; }
   [data-testid="stVerticalBlock"] { gap: 0 !important; }
+  iframe { height: 100vh !important; min-height: 100vh !important; }
+  [data-testid="stIFrame"] { height: 100vh !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -1664,4 +1666,4 @@ function _gerarRelatorio(mes, lista, realizado){{
 HTML = HTML.replace("__ANO__", str(datetime.now().year))
 
 # ─── Renderiza o HTML no Streamlit ────────────────────────────────────────────
-components.html(HTML, height=1100, scrolling=True)
+components.html(HTML, height=800, scrolling=True)
