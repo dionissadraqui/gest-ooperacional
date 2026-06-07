@@ -15,26 +15,17 @@ Execute com:
 import os
 import json
 import base64
-import threading
 from datetime import datetime
 from pathlib import Path
 
 import streamlit as st
 import streamlit.components.v1 as components
-
-# ──────────────────────────────────────────────────────────────────────────────
-# Flask mini-servidor rodando em thread separada para servir a API REST
-# O frontend HTML faz fetch() para http://localhost:5051/api/...
-# ──────────────────────────────────────────────────────────────────────────────
-from flask import Flask, request, jsonify
-from flask_cors import CORS
 import gspread
 from google.oauth2.service_account import Credentials
 
 # ─── Configurações ────────────────────────────────────────────────────────────
 SHEET_ID   = "1o_P9PLrdFf9wkVz6p2aQ_-2vnK1LYOzozOvVU0PJlxc"
 SHEET_NAME = "motoristas_luft"
-API_PORT   = 5051   # porta interna da API Flask (diferente da porta do Streamlit)
 
 # Credenciais: arquivo credentials.json na mesma pasta do app.py
 BASE_DIR         = Path(__file__).parent
@@ -143,110 +134,54 @@ def salvar_todos_motoristas(lista):
         ws.append_rows(all_rows, value_input_option="RAW")  # RAW evita parsing que quebra base64
 
 
-# ─── Flask API ────────────────────────────────────────────────────────────────
-flask_app = Flask(__name__)
-CORS(flask_app, origins="*")
-
-
-@flask_app.route("/api/status_arquivo")
-def status_arquivo():
-    return jsonify({"ok": True, "carregado": True, "nome": "Google Sheets", "caminho": SHEET_ID})
-
-
-@flask_app.route("/api/carregar_e_registrar", methods=["POST"])
-def carregar_e_registrar():
+# ─── Handler de ações do frontend via query_params ────────────────────────────
+def _processar_acao():
+    p = st.query_params
+    acao = p.get("acao", "")
+    if not acao:
+        return
     try:
-        total = len(ler_todos_motoristas())
-        return jsonify({"ok": True, "mensagem": "Google Sheets conectado.", "total": total, "nome": "Google Sheets"})
+        if acao == "add":
+            novo = json.loads(p.get("payload", "{}"))
+            lista = ler_todos_motoristas()
+            if any(m["cpf"] == novo["cpf"] for m in lista):
+                st.session_state["_api_res"] = json.dumps({"ok": False, "erro": "CPF já cadastrado."})
+            else:
+                if not novo.get("dssAnual"):
+                    novo["dssAnual"] = {mes: [False]*4 for mes in MESES}
+                lista.append(novo)
+                salvar_todos_motoristas(lista)
+                st.session_state["_api_res"] = json.dumps({"ok": True, "mensagem": "Condutor inserido."})
+        elif acao == "put":
+            cpf   = p.get("cpf", "")
+            dados = json.loads(p.get("payload", "{}"))
+            lista = ler_todos_motoristas()
+            idx   = next((i for i, m in enumerate(lista) if m["cpf"] == cpf), None)
+            if idx is None:
+                st.session_state["_api_res"] = json.dumps({"ok": False, "erro": "Não encontrado."})
+            else:
+                lista[idx].update(dados)
+                lista[idx]["cpf"] = cpf
+                salvar_todos_motoristas(lista)
+                st.session_state["_api_res"] = json.dumps({"ok": True, "mensagem": "Ficha atualizada."})
+        elif acao == "delete":
+            cpf   = p.get("cpf", "")
+            lista = ler_todos_motoristas()
+            nova  = [m for m in lista if m["cpf"] != cpf]
+            if len(nova) == len(lista):
+                st.session_state["_api_res"] = json.dumps({"ok": False, "erro": "Não encontrado."})
+            else:
+                salvar_todos_motoristas(nova)
+                st.session_state["_api_res"] = json.dumps({"ok": True, "mensagem": "Removido."})
+        elif acao == "save_all":
+            lista = json.loads(p.get("payload", "[]"))
+            salvar_todos_motoristas(lista)
+            st.session_state["_api_res"] = json.dumps({"ok": True, "mensagem": "Salvo."})
     except Exception as e:
-        return jsonify({"ok": False, "erro": str(e)}), 500
+        st.session_state["_api_res"] = json.dumps({"ok": False, "erro": str(e)})
+    st.query_params.clear()
 
-
-@flask_app.route("/api/motoristas", methods=["GET"])
-def get_motoristas():
-    try:
-        return jsonify({"ok": True, "motoristas": ler_todos_motoristas()})
-    except Exception as e:
-        return jsonify({"ok": False, "erro": str(e)}), 500
-
-
-@flask_app.route("/api/motoristas", methods=["POST"])
-def adicionar_motorista():
-    try:
-        novo = request.json
-        if not novo.get("cpf") or not novo.get("nome") or not novo.get("filial"):
-            return jsonify({"ok": False, "erro": "CPF, Nome e Filial são obrigatórios."}), 400
-        lista = ler_todos_motoristas()
-        if any(m["cpf"] == novo["cpf"] for m in lista):
-            return jsonify({"ok": False, "erro": "CPF já cadastrado."}), 409
-        if "dssAnual" not in novo or not novo["dssAnual"]:
-            novo["dssAnual"] = {mes: [False] * 4 for mes in MESES}
-        lista.append(novo)
-        salvar_todos_motoristas(lista)
-        return jsonify({"ok": True, "mensagem": "Condutor inserido com sucesso."})
-    except Exception as e:
-        return jsonify({"ok": False, "erro": str(e)}), 500
-
-
-@flask_app.route("/api/motoristas/<cpf>", methods=["PUT"])
-def atualizar_motorista(cpf):
-    try:
-        dados = request.json
-        lista = ler_todos_motoristas()
-        idx = next((i for i, m in enumerate(lista) if m["cpf"] == cpf), None)
-        if idx is None:
-            return jsonify({"ok": False, "erro": "Motorista não encontrado."}), 404
-        lista[idx].update(dados)
-        lista[idx]["cpf"] = cpf
-        salvar_todos_motoristas(lista)
-        return jsonify({"ok": True, "mensagem": "Ficha atualizada."})
-    except Exception as e:
-        return jsonify({"ok": False, "erro": str(e)}), 500
-
-
-@flask_app.route("/api/motoristas/<cpf>", methods=["DELETE"])
-def deletar_motorista(cpf):
-    try:
-        lista = ler_todos_motoristas()
-        nova = [m for m in lista if m["cpf"] != cpf]
-        if len(nova) == len(lista):
-            return jsonify({"ok": False, "erro": "Motorista não encontrado."}), 404
-        salvar_todos_motoristas(nova)
-        return jsonify({"ok": True, "mensagem": "Condutor removido."})
-    except Exception as e:
-        return jsonify({"ok": False, "erro": str(e)}), 500
-
-
-@flask_app.route("/api/salvar_tudo", methods=["POST"])
-def salvar_tudo():
-    try:
-        lista = request.json.get("motoristas", [])
-        salvar_todos_motoristas(lista)
-        return jsonify({"ok": True, "mensagem": "Base salva com sucesso."})
-    except Exception as e:
-        return jsonify({"ok": False, "erro": str(e)}), 500
-
-
-def iniciar_flask():
-    """Inicia o servidor Flask em thread daemon."""
-    import logging
-    log = logging.getLogger("werkzeug")
-    log.setLevel(logging.ERROR)
-    flask_app.run(host="0.0.0.0", port=API_PORT, debug=False, use_reloader=False)
-
-
-# Inicia Flask apenas uma vez (Streamlit recarrega o script em re-runs)
-import socket
-
-def porta_livre(porta):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex(('localhost', porta)) != 0
-
-if "flask_started" not in st.session_state:
-    if porta_livre(API_PORT):
-        t = threading.Thread(target=iniciar_flask, daemon=True)
-        t.start()
-    st.session_state["flask_started"] = True
+_processar_acao()
 
 # ─── Logo em base64 ───────────────────────────────────────────────────────────
 def logo_b64():
@@ -283,7 +218,8 @@ _LOGO_CSS  = (
     if _LOGO_B64 else
     "background:linear-gradient(135deg,#0a1440 0%,#1a3a6b 100%);"
 )
-_API_BASE  = f"http://localhost:{API_PORT}"
+_DADOS_INICIAIS = ler_todos_motoristas()
+_API_RES = st.session_state.pop("_api_res", "")
 
 HTML = f"""<!DOCTYPE html>
 <html lang="pt-BR">
@@ -885,8 +821,9 @@ HTML = f"""<!DOCTYPE html>
 <input type="file" id="hiddenPhotoInput" accept="image/*" style="display:none;" onchange="processarFotoCarregada(this)">
 
 <script>
-const API = '{_API_BASE}';
-const DADOS_INICIAIS = {json.dumps(ler_todos_motoristas(), ensure_ascii=False)};
+const DADOS_INICIAIS = {json.dumps(_DADOS_INICIAIS, ensure_ascii=False)};
+const _API_RES_INJETADO = {json.dumps(_API_RES, ensure_ascii=False)};
+if(_API_RES_INJETADO) {{ try {{ window._pendingApiResult = JSON.parse(_API_RES_INJETADO); }} catch(e) {{}} }}
 const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
                "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
@@ -909,10 +846,36 @@ function toast(msg, tipo='ok'){{
 }}
 
 async function apiFetch(url, metodo='GET', corpo=null){{
-  const opts = {{ method: metodo, headers: {{ 'Content-Type': 'application/json' }} }};
-  if(corpo !== null) opts.body = JSON.stringify(corpo);
-  const resp = await fetch(API + url, opts);
-  return resp.json();
+  return new Promise((resolve) => {{
+    const params = new URLSearchParams();
+    if(url === '/api/motoristas' && metodo === 'POST') {{
+      params.set('acao', 'add');
+      params.set('payload', JSON.stringify(corpo));
+    }} else if(url.includes('/api/motoristas/') && metodo === 'PUT') {{
+      params.set('acao', 'put');
+      params.set('cpf', decodeURIComponent(url.split('/api/motoristas/')[1]));
+      params.set('payload', JSON.stringify(corpo));
+    }} else if(url.includes('/api/motoristas/') && metodo === 'DELETE') {{
+      params.set('acao', 'delete');
+      params.set('cpf', decodeURIComponent(url.split('/api/motoristas/')[1]));
+    }} else if(url === '/api/salvar_tudo' && metodo === 'POST') {{
+      params.set('acao', 'save_all');
+      params.set('payload', JSON.stringify(corpo.motoristas));
+    }}
+    window.parent.location.search = '?' + params.toString();
+    const t0 = Date.now();
+    const poll = setInterval(() => {{
+      if(window._pendingApiResult) {{
+        clearInterval(poll);
+        const res = window._pendingApiResult;
+        window._pendingApiResult = null;
+        resolve(res);
+      }} else if(Date.now() - t0 > 15000) {{
+        clearInterval(poll);
+        resolve({{ok: false, erro: 'Timeout — tente novamente'}});
+      }}
+    }}, 400);
+  }});
 }}
 
 // ── KPI Modal ──
