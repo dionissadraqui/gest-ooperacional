@@ -1574,10 +1574,9 @@ function _gerarRelatorio(mes, lista, realizado){{
     setTimeout(()=>{{
       splash.style.transition = 'opacity .5s';
       splash.style.opacity    = '0';
-      setTimeout(()=>{{ splash.style.display='none'; carregarDados(); }}, 500);
+      setTimeout(()=>{{ splash.style.display='none'; atualizarDashboardCompleto(); }}, 500);
     }}, 900);
   }}
-
   async function inicializar(){{
     progress.style.display = 'block';
     progressB.style.width  = '100%';
