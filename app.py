@@ -1579,8 +1579,14 @@ function _gerarRelatorio(mes, lista, realizado){{
   }}
   async function inicializar(){{
     progress.style.display = 'block';
-    progressB.style.width  = '100%';
+    progressB.style.width  = '0%';
     setStatus('Conectando ao Google Sheets...', false);
+    await new Promise(r => setTimeout(r, 400));
+    progressB.style.width  = '40%';
+    setStatus('Carregando motoristas...', false);
+    await new Promise(r => setTimeout(r, 600));
+    progressB.style.width  = '80%';
+    await new Promise(r => setTimeout(r, 400));
     fecharSplashECarregar(motoristasDB.length);
   }}
 
