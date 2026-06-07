@@ -795,10 +795,11 @@ HTML = f"""<!DOCTYPE html>
 
 <script>
 const API = '{_API_BASE}';
+const DADOS_INICIAIS = {json.dumps(ler_todos_motoristas(), ensure_ascii=False)};
 const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
                "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
-let motoristasDB         = [];
+let motoristasDB         = DADOS_INICIAIS;
 let dssChartInstance     = null;
 let filialChartInstance  = null;
 let motoristaEmEdicaoCpf = null;
@@ -1579,28 +1580,9 @@ function _gerarRelatorio(mes, lista, realizado){{
 
   async function inicializar(){{
     progress.style.display = 'block';
-    progressB.style.width  = '40%';
+    progressB.style.width  = '100%';
     setStatus('Conectando ao Google Sheets...', false);
-    // Aguarda o Flask estar pronto (até 10 tentativas)
-    let tentativas = 0;
-   while(tentativas < 20){{
-      try{{
-        progressB.style.width = (40 + tentativas * 6) + '%';
-        const res  = await fetch(API + '/api/status_arquivo');
-        const data = await res.json();
-        if(data.ok){{
-          progressB.style.width = '70%';
-          setStatus('Carregando motoristas...', false);
-          const res2  = await fetch(API + '/api/motoristas');
-          const data2 = await res2.json();
-          fecharSplashECarregar(data2.ok ? data2.motoristas.length : 0);
-          return;
-        }}
-      }} catch(e){{ /* ainda não pronto */ }}
-      tentativas++;
-      await new Promise(r => setTimeout(r, 2000));
-    }}
-    setStatus('Erro: servidor não respondeu. Verifique credentials.json', true);
+    fecharSplashECarregar(motoristasDB.length);
   }}
 
   inicializar();
