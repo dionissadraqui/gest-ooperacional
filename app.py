@@ -550,12 +550,12 @@ HTML = f"""<!DOCTYPE html>
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
         <input type="text" id="loginUser" placeholder="Usuário"
           style="background:rgba(255,255,255,0.08);border:1.5px solid rgba(59,125,216,0.4);color:#fff;padding:10px 14px;border-radius:8px;font-size:14px;outline:none;letter-spacing:.5px;"
-          onkeydown="if(event.key==='Enter') tentarLogin()">
+           >
         <input type="password" id="loginPass" placeholder="Senha"
           style="background:rgba(255,255,255,0.08);border:1.5px solid rgba(59,125,216,0.4);color:#fff;padding:10px 14px;border-radius:8px;font-size:14px;outline:none;letter-spacing:.5px;"
-          onkeydown="if(event.key==='Enter') tentarLogin()">
+          >
       </div>
-      <button onclick="tentarLogin()"
+       <button id="btnEntrar"
         style="width:100%;background:#3b7dd8;color:#fff;border:none;padding:11px;border-radius:8px;font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;">
         <i class="fa-solid fa-right-to-bracket" style="margin-right:6px"></i>Entrar
       </button>
@@ -874,27 +874,84 @@ function motoristasParaLinhas(lista){{
   }});
 }}
 
+function _comprimirBase64(base64, maxPx, qualidade){{
+  return new Promise(resolve => {{
+    if(!base64 || !base64.startsWith('data:image')){{ resolve(base64 || ''); return; }}
+    const img = new Image();
+    img.onload = () => {{
+      const canvas = document.createElement('canvas');
+      const escala = Math.min(1, maxPx / Math.max(img.width, img.height));
+      canvas.width  = Math.round(img.width  * escala);
+      canvas.height = Math.round(img.height * escala);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      // Tenta qualidade pedida, se passar de 35.000 chars reduz mais
+      let resultado = canvas.toDataURL('image/jpeg', qualidade);
+      if(resultado.length > 35000){{
+        resultado = canvas.toDataURL('image/jpeg', 0.3);
+      }}
+      if(resultado.length > 35000){{
+        // Última tentativa: reduz canvas para metade
+        const c2 = document.createElement('canvas');
+        c2.width  = Math.round(canvas.width  * 0.5);
+        c2.height = Math.round(canvas.height * 0.5);
+        c2.getContext('2d').drawImage(canvas, 0, 0, c2.width, c2.height);
+        resultado = c2.toDataURL('image/jpeg', 0.25);
+      }}
+      // Se ainda assim passar, descarta a foto para não corromper o banco
+      if(resultado.length > 35000){{
+        resolve('');
+        toast('Foto muito grande mesmo após compressão. Use uma imagem menor.', 'erro');
+        return;
+      }}
+      resolve(resultado);
+    }};
+    img.onerror = () => resolve('');
+    img.src = base64;
+  }});
+}}
+
 async function salvarTodosNaSheetsAPI(lista){{
   const auth = `Bearer ${{ACCESS_TOKEN}}`;
   const rangeBase = `${{SHEET_NAME_JS}}!A2:ZZ`;
-  // 1. limpa os dados existentes
-  await fetch(`${{SHEETS_BASE}}/${{SHEET_ID_JS}}/values/${{encodeURIComponent(rangeBase)}}:clear`, {{
-    method: 'POST',
-    headers: {{ 'Authorization': auth }}
-  }});
-  if(lista.length === 0) return {{ ok: true }};
-  // 2. escreve as novas linhas
+
+  // Comprime fotos antes de montar o payload — evita estourar limite da API
+  const listaSegura = await Promise.all(lista.map(async m => {{
+    const fotoComprimida = m.foto ? await _comprimirBase64(m.foto, 80, 0.5) : '';
+    return {{ ...m, foto: fotoComprimida }};
+  }}));
+
+  // Verifica tamanho antes de qualquer operação destrutiva
+  const payload = JSON.stringify({{ values: motoristasParaLinhas(listaSegura) }});
+  const tamanhoMB = new Blob([payload]).size / 1024 / 1024;
+  if(tamanhoMB > 8){{
+    return {{ ok: false, erro: `Foto muito grande (${{tamanhoMB.toFixed(1)}} MB). Reduza a imagem.` }};
+  }}
+
+  // 1. Limpa — só executa depois que o payload foi validado
+  const clearResp = await fetch(
+    `${{SHEETS_BASE}}/${{SHEET_ID_JS}}/values/${{encodeURIComponent(rangeBase)}}:clear`,
+    {{ method: 'POST', headers: {{ 'Authorization': auth }} }}
+  );
+  if(!clearResp.ok){{
+    const err = await clearResp.text();
+    return {{ ok: false, erro: 'Erro ao limpar planilha: ' + err }};
+  }}
+
+  if(listaSegura.length === 0) return {{ ok: true }};
+
+  // 2. Escreve as novas linhas
   const resp = await fetch(
     `${{SHEETS_BASE}}/${{SHEET_ID_JS}}/values/${{encodeURIComponent(rangeBase)}}?valueInputOption=USER_ENTERED`,
     {{
       method: 'PUT',
       headers: {{ 'Authorization': auth, 'Content-Type': 'application/json' }},
-      body: JSON.stringify({{ values: motoristasParaLinhas(lista) }})
+      body: payload
     }}
   );
-  if(!resp.ok) {{
+  if(!resp.ok){{
     const err = await resp.text();
-    return {{ ok: false, erro: err }};
+    return {{ ok: false, erro: 'Erro ao salvar dados: ' + err }};
   }}
   return {{ ok: true }};
 }}
@@ -1484,8 +1541,9 @@ function dispararUploadFoto(){{ document.getElementById('hiddenPhotoInput').clic
 function processarFotoCarregada(input){{
   if(input.files && input.files[0]){{
     const reader = new FileReader();
-    reader.onload = e => {{
-      fotoTemporariaBase64 = e.target.result;
+    reader.onload = async e => {{
+      // Comprime já na leitura — nunca guarda base64 gigante na memória
+      fotoTemporariaBase64 = await _comprimirBase64(e.target.result, 80, 0.5);
       const img  = document.getElementById('profilePreviewImg');
       const icon = document.getElementById('profileIconPlaceholder');
       if(icon) icon.style.display = 'none';
@@ -1859,8 +1917,16 @@ function tentarLogin(){{
 }}
 
 (function(){{
-  // foco automático no campo usuário
   setTimeout(() => {{ document.getElementById('loginUser').focus(); }}, 200);
+
+  document.getElementById('btnEntrar').addEventListener('click', tentarLogin);
+
+  document.getElementById('loginUser').addEventListener('keydown', e => {{
+    if(e.key === 'Enter') tentarLogin();
+  }});
+  document.getElementById('loginPass').addEventListener('keydown', e => {{
+    if(e.key === 'Enter') tentarLogin();
+  }});
 }})();
 
 const splash    = document.getElementById('splash-screen');
