@@ -12,30 +12,21 @@ Execute com:
 #  python3 -m streamlit run app.py
 
 
-import os
 import json
 import base64
-import threading
 from datetime import datetime
 from pathlib import Path
 
 import streamlit as st
 import streamlit.components.v1 as components
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Flask mini-servidor rodando em thread separada para servir a API REST
-# O frontend HTML faz fetch() para http://localhost:5051/api/...
-# ──────────────────────────────────────────────────────────────────────────────
-from flask import Flask, request, jsonify
-from flask_cors import CORS
 import gspread
 from google.oauth2.service_account import Credentials
+import google.auth.transport.requests
 
 # ─── Configurações ────────────────────────────────────────────────────────────
 SHEET_ID   = "1o_P9PLrdFf9wkVz6p2aQ_-2vnK1LYOzozOvVU0PJlxc"
 SHEET_NAME = "motoristas_luft"
-API_PORT   = 5051   # porta interna da API Flask (diferente da porta do Streamlit)
-
 # Credenciais: arquivo credentials.json na mesma pasta do app.py
 BASE_DIR         = Path(__file__).parent
 CREDENTIALS_PATH = BASE_DIR / "gestaodefrota-498416-b86f8b663ae2.json"
@@ -140,110 +131,12 @@ def salvar_todos_motoristas(lista):
         ws.append_rows(all_rows, value_input_option="USER_ENTERED")
 
 
-# ─── Flask API ────────────────────────────────────────────────────────────────
-flask_app = Flask(__name__)
-CORS(flask_app, origins="*")
-
-
-@flask_app.route("/api/status_arquivo")
-def status_arquivo():
-    return jsonify({"ok": True, "carregado": True, "nome": "Google Sheets", "caminho": SHEET_ID})
-
-
-@flask_app.route("/api/carregar_e_registrar", methods=["POST"])
-def carregar_e_registrar():
-    try:
-        total = len(ler_todos_motoristas())
-        return jsonify({"ok": True, "mensagem": "Google Sheets conectado.", "total": total, "nome": "Google Sheets"})
-    except Exception as e:
-        return jsonify({"ok": False, "erro": str(e)}), 500
-
-
-@flask_app.route("/api/motoristas", methods=["GET"])
-def get_motoristas():
-    try:
-        return jsonify({"ok": True, "motoristas": ler_todos_motoristas()})
-    except Exception as e:
-        return jsonify({"ok": False, "erro": str(e)}), 500
-
-
-@flask_app.route("/api/motoristas", methods=["POST"])
-def adicionar_motorista():
-    try:
-        novo = request.json
-        if not novo.get("cpf") or not novo.get("nome") or not novo.get("filial"):
-            return jsonify({"ok": False, "erro": "CPF, Nome e Filial são obrigatórios."}), 400
-        lista = ler_todos_motoristas()
-        if any(m["cpf"] == novo["cpf"] for m in lista):
-            return jsonify({"ok": False, "erro": "CPF já cadastrado."}), 409
-        if "dssAnual" not in novo or not novo["dssAnual"]:
-            novo["dssAnual"] = {mes: [False] * 4 for mes in MESES}
-        lista.append(novo)
-        salvar_todos_motoristas(lista)
-        return jsonify({"ok": True, "mensagem": "Condutor inserido com sucesso."})
-    except Exception as e:
-        return jsonify({"ok": False, "erro": str(e)}), 500
-
-
-@flask_app.route("/api/motoristas/<cpf>", methods=["PUT"])
-def atualizar_motorista(cpf):
-    try:
-        dados = request.json
-        lista = ler_todos_motoristas()
-        idx = next((i for i, m in enumerate(lista) if m["cpf"] == cpf), None)
-        if idx is None:
-            return jsonify({"ok": False, "erro": "Motorista não encontrado."}), 404
-        lista[idx].update(dados)
-        lista[idx]["cpf"] = cpf
-        salvar_todos_motoristas(lista)
-        return jsonify({"ok": True, "mensagem": "Ficha atualizada."})
-    except Exception as e:
-        return jsonify({"ok": False, "erro": str(e)}), 500
-
-
-@flask_app.route("/api/motoristas/<cpf>", methods=["DELETE"])
-def deletar_motorista(cpf):
-    try:
-        lista = ler_todos_motoristas()
-        nova = [m for m in lista if m["cpf"] != cpf]
-        if len(nova) == len(lista):
-            return jsonify({"ok": False, "erro": "Motorista não encontrado."}), 404
-        salvar_todos_motoristas(nova)
-        return jsonify({"ok": True, "mensagem": "Condutor removido."})
-    except Exception as e:
-        return jsonify({"ok": False, "erro": str(e)}), 500
-
-
-@flask_app.route("/api/salvar_tudo", methods=["POST"])
-def salvar_tudo():
-    try:
-        lista = request.json.get("motoristas", [])
-        salvar_todos_motoristas(lista)
-        return jsonify({"ok": True, "mensagem": "Base salva com sucesso."})
-    except Exception as e:
-        return jsonify({"ok": False, "erro": str(e)}), 500
-
-
-def iniciar_flask():
-    """Inicia o servidor Flask em thread daemon."""
-    import logging
-    log = logging.getLogger("werkzeug")
-    log.setLevel(logging.ERROR)
-    flask_app.run(host="0.0.0.0", port=API_PORT, debug=False, use_reloader=False)
-
-
-# Inicia Flask apenas uma vez (Streamlit recarrega o script em re-runs)
-import socket
-
-def porta_livre(porta):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex(('localhost', porta)) != 0
-
-if "flask_started" not in st.session_state:
-    if porta_livre(API_PORT):
-        t = threading.Thread(target=iniciar_flask, daemon=True)
-        t.start()
-    st.session_state["flask_started"] = True
+# ─── Gera access token OAuth2 para o JS usar ─────────────────────────────────
+def get_access_token():
+    creds_dict = dict(st.secrets["gcp_service_account"])
+    creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
+    creds.refresh(google.auth.transport.requests.Request())
+    return creds.token
 
 # ─── Logo em base64 ───────────────────────────────────────────────────────────
 def logo_b64():
@@ -280,7 +173,7 @@ _LOGO_CSS  = (
     if _LOGO_B64 else
     "background:linear-gradient(135deg,#0a1440 0%,#1a3a6b 100%);"
 )
-_API_BASE  = f"http://localhost:{API_PORT}"
+_ACCESS_TOKEN = get_access_token()
 
 HTML = f"""<!DOCTYPE html>
 <html lang="pt-BR">
@@ -882,7 +775,10 @@ HTML = f"""<!DOCTYPE html>
 <input type="file" id="hiddenPhotoInput" accept="image/*" style="display:none;" onchange="processarFotoCarregada(this)">
 
 <script>
-const API = '{_API_BASE}';
+const ACCESS_TOKEN = '{_ACCESS_TOKEN}';
+const SHEET_ID_JS  = '{SHEET_ID}';
+const SHEET_NAME_JS= '{SHEET_NAME}';
+const SHEETS_BASE  = 'https://sheets.googleapis.com/v4/spreadsheets';
 const DADOS_INICIAIS = {json.dumps(ler_todos_motoristas(), ensure_ascii=False)};
 const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
                "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
@@ -905,13 +801,50 @@ function toast(msg, tipo='ok'){{
   setTimeout(() => el.classList.remove('show'), 3500);
 }}
 
-async function apiFetch(url, metodo='GET', corpo=null){{
-  const opts = {{ method: metodo, headers: {{ 'Content-Type': 'application/json' }} }};
-  if(corpo !== null) opts.body = JSON.stringify(corpo);
-  const resp = await fetch(API + url, opts);
-  return resp.json();
+function motoristasParaLinhas(lista){{
+  return lista.map(m => {{
+    const row = [
+      m.cpf||'', m.nome||'', m.filial||'', m.telefone||'', m.email||'', m.foto||'',
+      m.reciclagem||'PENDENTE', m.simulador||'PENDENTE',
+      m.excesso||0, m.multas||0, m.acidentes||0,
+      m.obsAcidente||'', m.obsMultas||'', m.obsGerais||'',
+      m.obsReciclagem||'', m.obsSimulador||'',
+      m.cnh||'', m.validadeCnh||'', m.admissao||''
+    ];
+    const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+                   "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+    meses.forEach(mes => {{
+      const sems = m.dssAnual?.[mes] || [false,false,false,false];
+      for(let s=0;s<4;s++) row.push(sems[s] ? 1 : 0);
+    }});
+    return row;
+  }});
 }}
 
+async function salvarTodosNaSheetsAPI(lista){{
+  const auth = `Bearer ${{ACCESS_TOKEN}}`;
+  const rangeBase = `${{SHEET_NAME_JS}}!A2:ZZ`;
+  // 1. limpa os dados existentes
+  await fetch(`${{SHEETS_BASE}}/${{SHEET_ID_JS}}/values/${{encodeURIComponent(rangeBase)}}:clear`, {{
+    method: 'POST',
+    headers: {{ 'Authorization': auth }}
+  }});
+  if(lista.length === 0) return {{ ok: true }};
+  // 2. escreve as novas linhas
+  const resp = await fetch(
+    `${{SHEETS_BASE}}/${{SHEET_ID_JS}}/values/${{encodeURIComponent(rangeBase)}}?valueInputOption=USER_ENTERED`,
+    {{
+      method: 'PUT',
+      headers: {{ 'Authorization': auth, 'Content-Type': 'application/json' }},
+      body: JSON.stringify({{ values: motoristasParaLinhas(lista) }})
+    }}
+  );
+  if(!resp.ok) {{
+    const err = await resp.text();
+    return {{ ok: false, erro: err }};
+  }}
+  return {{ ok: true }};
+}}
 // ── KPI Modal ──
 const KPI_CONFIG = {{
   total:    {{ label:'Todos os Motoristas',         icon:'fa-users',             cor:'#7ab8ff', bg:'rgba(74,159,255,0.15)',  filtro: m => true, dssModal:true }},
@@ -1249,9 +1182,9 @@ async function adicionarNovoMotorista(){{
   }};
   mostrarSpinner(true);
   try{{
-    const res = await apiFetch('/api/motoristas', 'POST', novo);
+    motoristasDB.push(novo);
+    const res = await salvarTodosNaSheetsAPI(motoristasDB);
     if(res.ok){{
-      motoristasDB.push(novo);
       document.getElementById('addCpf').value = '';
       document.getElementById('addNome').value = '';
       document.getElementById('addFilial').value = '';
@@ -1259,8 +1192,11 @@ async function adicionarNovoMotorista(){{
       document.getElementById('btnToggleForm').classList.remove('open');
       atualizarDashboardCompleto();
       toast('Condutor inserido e salvo no Google Sheets!');
-    }} else {{ toast(res.erro || 'Erro ao inserir.', 'erro'); }}
-  }} catch(e){{ toast('Falha de conexão.', 'erro'); }}
+    }} else {{
+      motoristasDB.pop();
+      toast(res.erro || 'Erro ao inserir.', 'erro');
+    }}
+  }} catch(e){{ toast('Falha de conexão: ' + e.message, 'erro'); }}
   finally{{ mostrarSpinner(false); }}
 }}
 
@@ -1522,41 +1458,49 @@ async function confirmarEdicaoFicha(){{
   }};
   mostrarSpinner(true);
   try{{
-    const res = await apiFetch(`/api/motoristas/${{encodeURIComponent(motoristaEmEdicaoCpf)}}`, 'PUT', atualizado);
+    const anterior = motoristasDB[idx];
+    motoristasDB[idx] = atualizado;
+    const res = await salvarTodosNaSheetsAPI(motoristasDB);
     if(res.ok){{
-      motoristasDB[idx] = atualizado;
       fecharJanelaDriver();
       atualizarDashboardCompleto();
       if(filialModalAtiva) expandirFilial(filialModalAtiva);
       toast('Ficha atualizada e salva no Google Sheets!');
-    }} else {{ toast(res.erro || 'Erro ao salvar.', 'erro'); }}
-  }} catch(e){{ toast('Falha de conexão.', 'erro'); }}
+    }} else {{
+      motoristasDB[idx] = anterior;
+      toast(res.erro || 'Erro ao salvar.', 'erro');
+    }}
+  }} catch(e){{ toast('Falha de conexão: ' + e.message, 'erro'); }}
   finally{{ mostrarSpinner(false); }}
 }}
 
 async function deletarMotoristaAtual(cpf, nome){{
   if(!confirm(`Remover permanentemente o condutor ${{nome}}?`)) return;
-  mostrarSpinner(true);
+ mostrarSpinner(true);
   try{{
-    const res = await apiFetch(`/api/motoristas/${{encodeURIComponent(cpf)}}`, 'DELETE');
+    const anterior = [...motoristasDB];
+    motoristasDB = motoristasDB.filter(m => m.cpf !== cpf);
+    const res = await salvarTodosNaSheetsAPI(motoristasDB);
     if(res.ok){{
-      motoristasDB = motoristasDB.filter(m => m.cpf !== cpf);
       fecharJanelaDriver();
       atualizarDashboardCompleto();
       if(filialModalAtiva) expandirFilial(filialModalAtiva);
       toast('Condutor removido.');
-    }} else {{ toast(res.erro || 'Erro ao remover.', 'erro'); }}
-  }} catch(e){{ toast('Falha de conexão.', 'erro'); }}
+    }} else {{
+      motoristasDB = anterior;
+      toast(res.erro || 'Erro ao remover.', 'erro');
+    }}
+  }} catch(e){{ toast('Falha de conexão: ' + e.message, 'erro'); }}
   finally{{ mostrarSpinner(false); }}
 }}
 
 async function salvarTudoNoSheets(){{
   mostrarSpinner(true);
   try{{
-    const res = await apiFetch('/api/salvar_tudo', 'POST', {{ motoristas: motoristasDB }});
+    const res = await salvarTodosNaSheetsAPI(motoristasDB);
     if(res.ok) toast('Base salva com sucesso no Google Sheets!');
     else toast(res.erro || 'Erro ao salvar.', 'erro');
-  }} catch(e){{ toast('Falha de conexão.', 'erro'); }}
+  }} catch(e){{ toast('Falha de conexão: ' + e.message, 'erro'); }}
   finally{{ mostrarSpinner(false); }}
 }}
 
