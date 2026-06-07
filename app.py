@@ -702,8 +702,8 @@ HTML = f"""<!DOCTYPE html>
     </div>
   </div>
 
-  <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:12px;" class="charts-row">
-    <div class="panel">
+  <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:12px;align-items:stretch;" class="charts-row">
+    <div class="panel" style="display:flex;flex-direction:column;">
       <div class="sec-title">DSS por sessão — __ANO__ (registros realizados)</div>
       <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;align-items:center;">
         <span style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#16a34a;"><span style="display:inline-block;width:22px;height:8px;border-radius:2px;background:#16a34a;"></span>100% adesão</span>
@@ -713,20 +713,30 @@ HTML = f"""<!DOCTYPE html>
         <span style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#1a3a6b;"><span style="display:inline-block;width:22px;height:8px;border-radius:2px;background:#1a3a6b;border:1px solid #c4d0e4;"></span>Semana atual</span>
         <span style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#9aaabb;"><span style="display:inline-block;width:22px;height:8px;border-radius:2px;background:rgba(180,200,230,0.5);"></span>Futuro</span>
       </div>
-      <div class="chart-wrap" id="dssChartWrap" style="height:160px;transition:height 0.4s ease;"><canvas id="dssChart"></canvas></div>
+      <div class="chart-wrap" id="dssChartWrap" style="height:260px;transition:height 0.4s ease;"><canvas id="dssChart"></canvas></div>
     </div>
-    <div class="panel">
+    <div class="panel" style="display:flex;flex-direction:column;">
       <div class="sec-title">Motoristas por filial — total e pendências DSS</div>
       <div class="leg">
         <div class="leg-item"><span class="leg-sq" style="background:#22cc88"></span>Com DSS</div>
         <div class="leg-item"><span class="leg-sq" style="background:#ff4444"></span>Sem DSS</div>
       </div>
-      <div class="chart-wrap" style="height:160px;"><canvas id="filialChart"></canvas></div>
+      <div class="chart-wrap" style="flex:1;min-height:160px;"><canvas id="filialChart"></canvas></div>
     </div>
   </div>
 
   <div class="panel">
-    <div class="sec-title">Situação por filial — indicadores de conformidade</div>
+    <div class="sec-title">Status geral anual — indicadores por mês</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;align-items:center;">
+      <span style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#16a34a;"><span style="display:inline-block;width:22px;height:8px;border-radius:2px;background:#16a34a;"></span>100% adesão</span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#3b7dd8;"><span style="display:inline-block;width:22px;height:8px;border-radius:2px;background:#3b7dd8;"></span>+50% adesão</span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#d97706;"><span style="display:inline-block;width:22px;height:8px;border-radius:2px;background:#d97706;"></span>Menos de 50%</span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#dc2626;"><span style="display:inline-block;width:22px;height:8px;border-radius:2px;background:#dc2626;"></span>Sem registro</span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#1a3a6b;"><span style="display:inline-block;width:22px;height:8px;border-radius:2px;background:#1a3a6b;border:1px solid #c4d0e4;"></span>Mês atual</span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#9aaabb;"><span style="display:inline-block;width:22px;height:8px;border-radius:2px;background:rgba(180,200,230,0.5);"></span>Futuro</span>
+    </div>
+    <div style="position:relative;width:100%;height:200px;"><canvas id="statusAnualChart" role="img" aria-label="Gráfico de barras com DSS realizados, acidentes, multas e excessos de velocidade por mês"></canvas></div>
+  </div>
     <div style="margin-bottom:8px;display:flex;flex-wrap:wrap;gap:8px">
       <div class="leg-item"><span class="leg-sq" style="background:#22cc88"></span>Reciclagem ok</div>
       <div class="leg-item"><span class="leg-sq" style="background:#4a9eff"></span>Simulador ok</div>
@@ -1228,7 +1238,7 @@ function renderizarGraficos(filiais){{
     }});
   }});
   const maxVal = Math.max(...dssData, 1);
-  const dynamicH = Math.min(400, Math.max(160, 100 + maxVal * 3));
+  const dynamicH = Math.min(500, Math.max(260, 160 + maxVal * 4));
   const wrap = document.getElementById('dssChartWrap');
   if(wrap) wrap.style.height = dynamicH + 'px';
   const yStep = maxVal <= 5 ? 1 : maxVal <= 20 ? 2 : maxVal <= 50 ? 5 : maxVal <= 100 ? 10 : Math.ceil(maxVal / 10);
@@ -1290,6 +1300,80 @@ function renderizarGraficos(filiais){{
       scales:{{
         x:{{ stacked:true, ticks:{{ color:'#5a6e8a',font:{{ size:8 }},maxRotation:30,autoSkip:false }},grid:{{ color:'rgba(180,200,230,0.4)' }} }},
         y:{{ stacked:true, ticks:{{ color:'#5a6e8a',font:{{ size:9 }} }},grid:{{ color:'rgba(180,200,230,0.4)' }},min:0 }}
+      }}
+    }}
+  }});
+
+  if(window._statusAnualChartInstance) window._statusAnualChartInstance.destroy();
+  const statusLabels   = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+  const mesAtualIdxS   = new Date().getMonth();
+  const totalMotS      = motoristasDB.length;
+  const statusDssMes   = MESES.map(mes => {{
+    let n = 0;
+    motoristasDB.forEach(m => {{ if(dssOkNoMes(m, mes)) n++; }});
+    return n;
+  }});
+  const statusBarCors  = MESES.map((mes, mi) => {{
+    const pct     = totalMotS > 0 ? statusDssMes[mi] / totalMotS : 0;
+    const isCur   = mi === mesAtualIdxS;
+    const isPast  = mi < mesAtualIdxS;
+    if(isCur)           return '#1a3a6b';
+    if(!isPast)         return 'rgba(180,200,230,0.4)';
+    if(pct >= 1.0)      return '#16a34a';
+    if(pct >= 0.5)      return '#3b7dd8';
+    if(pct >  0)        return '#d97706';
+    return '#dc2626';
+  }});
+  const statusBordCors = MESES.map((mes, mi) => {{
+    const pct     = totalMotS > 0 ? statusDssMes[mi] / totalMotS : 0;
+    const isCur   = mi === mesAtualIdxS;
+    const isPast  = mi < mesAtualIdxS;
+    if(isCur)           return '#1a3a6b';
+    if(!isPast)         return 'rgba(180,200,230,0.6)';
+    if(pct >= 1.0)      return '#16a34a';
+    if(pct >= 0.5)      return '#3b7dd8';
+    if(pct >  0)        return '#d97706';
+    return '#dc2626';
+  }});
+  const statusFundoCores = MESES.map((mes, mi) => {{
+    const isCur  = mi === mesAtualIdxS;
+    const isPast = mi < mesAtualIdxS;
+    return (isPast && !isCur && statusDssMes[mi] === 0) ? 'rgba(220,38,38,0.25)' : 'transparent';
+  }});
+  const statusDataFundo = MESES.map((mes, mi) => {{
+    const isCur  = mi === mesAtualIdxS;
+    const isPast = mi < mesAtualIdxS;
+    return (isPast && !isCur && statusDssMes[mi] === 0) ? 1 : 0;
+  }});
+  window._statusAnualChartInstance = new Chart(document.getElementById('statusAnualChart'), {{
+    type:'bar',
+    data:{{ labels:statusLabels, datasets:[
+      {{ label:'Fundo Sem Registro', data:statusDataFundo, backgroundColor:statusFundoCores, borderColor:statusFundoCores, borderWidth:0, borderRadius:4, borderSkipped:false }},
+      {{ label:'DSS ok no mês', data:statusDssMes, backgroundColor:statusBarCors, borderColor:statusBordCors, borderWidth:1, borderRadius:4, borderSkipped:false }}
+    ]}},
+    options:{{
+      responsive:true, maintainAspectRatio:false,
+      animation:{{ duration:600, easing:'easeOutQuart' }},
+      plugins:{{ legend:{{ display:false }},
+        tooltip:{{
+          callbacks:{{
+            title: items => statusLabels[items[0].dataIndex] + ' ' + new Date().getFullYear(),
+            label: ctx => {{
+              const mi = ctx.dataIndex;
+              const count = statusDssMes[mi];
+              const total = totalMotS;
+              const pct = total > 0 ? Math.round(count/total*100) : 0;
+              if(mi > mesAtualIdxS) return ' Ainda não realizado';
+              return [` ${{count}} de ${{total}} motorista${{total!==1?'s':''}}`, ` Adesão: ${{pct}}%`];
+            }}
+          }},
+          backgroundColor:'#ffffff',borderColor:'#dde6f4',borderWidth:1,
+          titleColor:'#1a3a6b',bodyColor:'#5a6e8a',padding:10,cornerRadius:6
+        }}
+      }},
+      scales:{{
+        x:{{ ticks:{{ color:'#5a6e8a',font:{{size:10}} }},grid:{{ color:'rgba(180,200,230,0.4)' }} }},
+        y:{{ ticks:{{ color:'#5a6e8a',font:{{size:10}},stepSize:1,callback:v=>Number.isInteger(v)?v:'' }},grid:{{ color:'rgba(180,200,230,0.4)' }},min:0 }}
       }}
     }}
   }});
