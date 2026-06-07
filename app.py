@@ -650,16 +650,38 @@ HTML = f"""<!DOCTYPE html>
   <div class="splash-card">
     <div class="splash-logo-txt">LUFT<span> LOGISTICS</span></div>
     <div class="splash-sub">Sistema de Controle de Motoristas</div>
-    <div class="splash-label"><i class="fa-solid fa-database" style="margin-right:6px"></i>Conectando ao Google Sheets</div>
-    <div class="splash-drop-area" id="splashDropArea" style="cursor:default;pointer-events:none;">
-      <div class="splash-drop-icon"><i class="fa-brands fa-google" style="color:#34a853"></i></div>
-      <div class="splash-drop-txt">
-        <strong>Google Sheets</strong><br>
-        Carregando base de dados...
+
+    <!-- TELA DE LOGIN -->
+    <div id="loginBox">
+      <div class="splash-label" style="margin-bottom:18px;"><i class="fa-solid fa-lock" style="margin-right:6px"></i>Acesso Restrito</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
+        <input type="text" id="loginUser" placeholder="Usuário"
+          style="background:rgba(255,255,255,0.08);border:1.5px solid rgba(59,125,216,0.4);color:#fff;padding:10px 14px;border-radius:8px;font-size:14px;outline:none;letter-spacing:.5px;"
+          onkeydown="if(event.key==='Enter') tentarLogin()">
+        <input type="password" id="loginPass" placeholder="Senha"
+          style="background:rgba(255,255,255,0.08);border:1.5px solid rgba(59,125,216,0.4);color:#fff;padding:10px 14px;border-radius:8px;font-size:14px;outline:none;letter-spacing:.5px;"
+          onkeydown="if(event.key==='Enter') tentarLogin()">
       </div>
+      <button onclick="tentarLogin()"
+        style="width:100%;background:#3b7dd8;color:#fff;border:none;padding:11px;border-radius:8px;font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;">
+        <i class="fa-solid fa-right-to-bracket" style="margin-right:6px"></i>Entrar
+      </button>
+      <div id="loginErro" style="color:#ff4444;font-size:12px;margin-top:10px;min-height:16px;font-weight:600;"></div>
     </div>
-    <div class="splash-progress" id="splashProgress"><div class="splash-progress-bar" id="splashProgressBar"></div></div>
-    <div class="splash-status" id="splashStatus">Aguardando conexão...</div>
+
+    <!-- TELA DE CARREGAMENTO (oculta até login ok) -->
+    <div id="loadingBox" style="display:none;">
+      <div class="splash-label"><i class="fa-solid fa-database" style="margin-right:6px"></i>Conectando ao Google Sheets</div>
+      <div class="splash-drop-area" style="cursor:default;pointer-events:none;margin-top:14px;">
+        <div class="splash-drop-icon"><i class="fa-brands fa-google" style="color:#34a853"></i></div>
+        <div class="splash-drop-txt">
+          <strong>Google Sheets</strong><br>
+          Carregando base de dados...
+        </div>
+      </div>
+      <div class="splash-progress" id="splashProgress"><div class="splash-progress-bar" id="splashProgressBar"></div></div>
+      <div class="splash-status" id="splashStatus">Aguardando conexão...</div>
+    </div>
   </div>
 </div>
 
@@ -1622,42 +1644,62 @@ function _gerarRelatorio(mes, lista, realizado){{
   if(win) win.onload = () => {{ win.focus(); win.print(); }};
 }}
 
-// ── Inicialização ──
+// ── Login + Inicialização ──
+const CREDENCIAIS = {{ usuario: 'luft123', senha: 'luft321' }};
+
+function tentarLogin(){{
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value.trim();
+  const erro = document.getElementById('loginErro');
+  if(u === CREDENCIAIS.usuario && p === CREDENCIAIS.senha){{
+    document.getElementById('loginBox').style.display  = 'none';
+    document.getElementById('loadingBox').style.display = 'block';
+    inicializar();
+  }} else {{
+    erro.textContent = 'Usuário ou senha incorretos.';
+    document.getElementById('loginPass').value = '';
+    document.getElementById('loginPass').focus();
+    setTimeout(() => {{ erro.textContent = ''; }}, 3000);
+  }}
+}}
+
 (function(){{
-  const splash    = document.getElementById('splash-screen');
-  const status    = document.getElementById('splashStatus');
-  const progress  = document.getElementById('splashProgress');
-  const progressB = document.getElementById('splashProgressBar');
-
-  function setStatus(msg, erro){{
-    status.textContent = msg;
-    status.className   = 'splash-status' + (erro ? ' erro' : '');
-  }}
-
-  function fecharSplashECarregar(total){{
-    progressB.style.width = '100%';
-    setStatus(`✓ Google Sheets — ${{total}} motorista(s) encontrado(s)`, false);
-    setTimeout(()=>{{
-      splash.style.transition = 'opacity .5s';
-      splash.style.opacity    = '0';
-      setTimeout(()=>{{ splash.style.display='none'; atualizarDashboardCompleto(); }}, 500);
-    }}, 900);
-  }}
-  async function inicializar(){{
-    progress.style.display = 'block';
-    progressB.style.width  = '0%';
-    setStatus('Conectando ao Google Sheets...', false);
-    await new Promise(r => setTimeout(r, 400));
-    progressB.style.width  = '40%';
-    setStatus('Carregando motoristas...', false);
-    await new Promise(r => setTimeout(r, 600));
-    progressB.style.width  = '80%';
-    await new Promise(r => setTimeout(r, 400));
-    fecharSplashECarregar(motoristasDB.length);
-  }}
-
-  inicializar();
+  // foco automático no campo usuário
+  setTimeout(() => {{ document.getElementById('loginUser').focus(); }}, 200);
 }})();
+
+const splash    = document.getElementById('splash-screen');
+const status    = document.getElementById('splashStatus');
+const progress  = document.getElementById('splashProgress');
+const progressB = document.getElementById('splashProgressBar');
+
+function setStatus(msg, erro){{
+  status.textContent = msg;
+  status.className   = 'splash-status' + (erro ? ' erro' : '');
+}}
+
+function fecharSplashECarregar(total){{
+  progressB.style.width = '100%';
+  setStatus(`✓ Google Sheets — ${{total}} motorista(s) encontrado(s)`, false);
+  setTimeout(()=>{{
+    splash.style.transition = 'opacity .5s';
+    splash.style.opacity    = '0';
+    setTimeout(()=>{{ splash.style.display='none'; atualizarDashboardCompleto(); }}, 500);
+  }}, 900);
+}}
+
+async function inicializar(){{
+  progress.style.display = 'block';
+  progressB.style.width  = '0%';
+  setStatus('Conectando ao Google Sheets...', false);
+  await new Promise(r => setTimeout(r, 400));
+  progressB.style.width  = '40%';
+  setStatus('Carregando motoristas...', false);
+  await new Promise(r => setTimeout(r, 600));
+  progressB.style.width  = '80%';
+  await new Promise(r => setTimeout(r, 400));
+  fecharSplashECarregar(motoristasDB.length);
+}}
 </script>
 </body>
 </html>
