@@ -12,34 +12,22 @@ Execute com:
 #  python3 -m streamlit run app.py
 
 
-import os
 import json
 import base64
-import threading
 from datetime import datetime
 from pathlib import Path
 
 import streamlit as st
 import streamlit.components.v1 as components
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Flask mini-servidor rodando em thread separada para servir a API REST
-# O frontend HTML faz fetch() para http://localhost:5051/api/...
-# ──────────────────────────────────────────────────────────────────────────────
-from flask import Flask, request, jsonify
-from flask_cors import CORS
 import gspread
 from google.oauth2.service_account import Credentials
-
 # ─── Configurações ────────────────────────────────────────────────────────────
 SHEET_ID   = "1o_P9PLrdFf9wkVz6p2aQ_-2vnK1LYOzozOvVU0PJlxc"
 SHEET_NAME = "motoristas_luft"
-API_PORT   = 5051   # porta interna da API Flask (diferente da porta do Streamlit)
 
-# Credenciais: arquivo credentials.json na mesma pasta do app.py
-BASE_DIR         = Path(__file__).parent
-CREDENTIALS_PATH = BASE_DIR / "gestaodefrota-498416-b86f8b663ae2.json"
-LOGO_PATH        = BASE_DIR / "luft.png"
+BASE_DIR  = Path(__file__).parent
+LOGO_PATH = BASE_DIR / "luft.png"
 
 MESES = [
     "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -140,110 +128,7 @@ def salvar_todos_motoristas(lista):
         ws.append_rows(all_rows, value_input_option="USER_ENTERED")
 
 
-# ─── Flask API ────────────────────────────────────────────────────────────────
-flask_app = Flask(__name__)
-CORS(flask_app, origins="*")
 
-
-@flask_app.route("/api/status_arquivo")
-def status_arquivo():
-    return jsonify({"ok": True, "carregado": True, "nome": "Google Sheets", "caminho": SHEET_ID})
-
-
-@flask_app.route("/api/carregar_e_registrar", methods=["POST"])
-def carregar_e_registrar():
-    try:
-        total = len(ler_todos_motoristas())
-        return jsonify({"ok": True, "mensagem": "Google Sheets conectado.", "total": total, "nome": "Google Sheets"})
-    except Exception as e:
-        return jsonify({"ok": False, "erro": str(e)}), 500
-
-
-@flask_app.route("/api/motoristas", methods=["GET"])
-def get_motoristas():
-    try:
-        return jsonify({"ok": True, "motoristas": ler_todos_motoristas()})
-    except Exception as e:
-        return jsonify({"ok": False, "erro": str(e)}), 500
-
-
-@flask_app.route("/api/motoristas", methods=["POST"])
-def adicionar_motorista():
-    try:
-        novo = request.json
-        if not novo.get("cpf") or not novo.get("nome") or not novo.get("filial"):
-            return jsonify({"ok": False, "erro": "CPF, Nome e Filial são obrigatórios."}), 400
-        lista = ler_todos_motoristas()
-        if any(m["cpf"] == novo["cpf"] for m in lista):
-            return jsonify({"ok": False, "erro": "CPF já cadastrado."}), 409
-        if "dssAnual" not in novo or not novo["dssAnual"]:
-            novo["dssAnual"] = {mes: [False] * 4 for mes in MESES}
-        lista.append(novo)
-        salvar_todos_motoristas(lista)
-        return jsonify({"ok": True, "mensagem": "Condutor inserido com sucesso."})
-    except Exception as e:
-        return jsonify({"ok": False, "erro": str(e)}), 500
-
-
-@flask_app.route("/api/motoristas/<cpf>", methods=["PUT"])
-def atualizar_motorista(cpf):
-    try:
-        dados = request.json
-        lista = ler_todos_motoristas()
-        idx = next((i for i, m in enumerate(lista) if m["cpf"] == cpf), None)
-        if idx is None:
-            return jsonify({"ok": False, "erro": "Motorista não encontrado."}), 404
-        lista[idx].update(dados)
-        lista[idx]["cpf"] = cpf
-        salvar_todos_motoristas(lista)
-        return jsonify({"ok": True, "mensagem": "Ficha atualizada."})
-    except Exception as e:
-        return jsonify({"ok": False, "erro": str(e)}), 500
-
-
-@flask_app.route("/api/motoristas/<cpf>", methods=["DELETE"])
-def deletar_motorista(cpf):
-    try:
-        lista = ler_todos_motoristas()
-        nova = [m for m in lista if m["cpf"] != cpf]
-        if len(nova) == len(lista):
-            return jsonify({"ok": False, "erro": "Motorista não encontrado."}), 404
-        salvar_todos_motoristas(nova)
-        return jsonify({"ok": True, "mensagem": "Condutor removido."})
-    except Exception as e:
-        return jsonify({"ok": False, "erro": str(e)}), 500
-
-
-@flask_app.route("/api/salvar_tudo", methods=["POST"])
-def salvar_tudo():
-    try:
-        lista = request.json.get("motoristas", [])
-        salvar_todos_motoristas(lista)
-        return jsonify({"ok": True, "mensagem": "Base salva com sucesso."})
-    except Exception as e:
-        return jsonify({"ok": False, "erro": str(e)}), 500
-
-
-def iniciar_flask():
-    """Inicia o servidor Flask em thread daemon."""
-    import logging
-    log = logging.getLogger("werkzeug")
-    log.setLevel(logging.ERROR)
-    flask_app.run(host="0.0.0.0", port=API_PORT, debug=False, use_reloader=False)
-
-
-# Inicia Flask apenas uma vez (Streamlit recarrega o script em re-runs)
-import socket
-
-def porta_livre(porta):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex(('localhost', porta)) != 0
-
-if "flask_started" not in st.session_state:
-    if porta_livre(API_PORT):
-        t = threading.Thread(target=iniciar_flask, daemon=True)
-        t.start()
-    st.session_state["flask_started"] = True
 
 # ─── Logo em base64 ───────────────────────────────────────────────────────────
 def logo_b64():
@@ -280,7 +165,7 @@ _LOGO_CSS  = (
     if _LOGO_B64 else
     "background:linear-gradient(135deg,#0a1440 0%,#1a3a6b 100%);"
 )
-_API_BASE  = f"http://localhost:{API_PORT}"
+_API_BASE  = ""
 
 HTML = f"""<!DOCTYPE html>
 <html lang="pt-BR">
@@ -882,7 +767,7 @@ HTML = f"""<!DOCTYPE html>
 <input type="file" id="hiddenPhotoInput" accept="image/*" style="display:none;" onchange="processarFotoCarregada(this)">
 
 <script>
-const API = '{_API_BASE}';
+// salvamento via Streamlit query_params — sem API Flask
 const DADOS_INICIAIS = {json.dumps(ler_todos_motoristas(), ensure_ascii=False)};
 const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
                "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
@@ -1045,14 +930,8 @@ function toggleFormulario(){{
   btn.classList.toggle('open', aberto);
 }}
 
-async function carregarDados(){{
-  mostrarSpinner(true);
-  try{{
-    const res = await apiFetch('/api/motoristas');
-    if(res.ok){{ motoristasDB = res.motoristas; atualizarDashboardCompleto(); }}
-    else {{ toast('Erro ao carregar dados: ' + res.erro, 'erro'); }}
-  }} catch(e){{ toast('Falha de conexão com o servidor.', 'erro'); }}
-  finally{{ mostrarSpinner(false); }}
+function carregarDados(){{
+  atualizarDashboardCompleto();
 }}
 
 function gerarMatrizDssEmBranco(){{
@@ -1233,11 +1112,12 @@ function renderizarGraficos(filiais){{
   }});
 }}
 
-async function adicionarNovoMotorista(){{
+function adicionarNovoMotorista(){{
   const cpf    = document.getElementById('addCpf').value.trim();
   const nome   = document.getElementById('addNome').value.toUpperCase().trim();
   const filial = document.getElementById('addFilial').value.toUpperCase().trim();
   if(!cpf || !nome || !filial){{ toast('Preencha CPF, Nome e Filial.', 'erro'); return; }}
+  if(motoristasDB.some(m => m.cpf === cpf)){{ toast('CPF já cadastrado.', 'erro'); return; }}
   const novo = {{
     cpf, nome, filial, telefone:'', email:'', foto:'',
     reciclagem: document.getElementById('addRec').value,
@@ -1247,21 +1127,15 @@ async function adicionarNovoMotorista(){{
     cnh:'', validadeCnh:'', admissao:'',
     dssAnual: gerarMatrizDssEmBranco()
   }};
-  mostrarSpinner(true);
-  try{{
-    const res = await apiFetch('/api/motoristas', 'POST', novo);
-    if(res.ok){{
-      motoristasDB.push(novo);
-      document.getElementById('addCpf').value = '';
-      document.getElementById('addNome').value = '';
-      document.getElementById('addFilial').value = '';
-      document.getElementById('formBody').classList.remove('open');
-      document.getElementById('btnToggleForm').classList.remove('open');
-      atualizarDashboardCompleto();
-      toast('Condutor inserido e salvo no Google Sheets!');
-    }} else {{ toast(res.erro || 'Erro ao inserir.', 'erro'); }}
-  }} catch(e){{ toast('Falha de conexão.', 'erro'); }}
-  finally{{ mostrarSpinner(false); }}
+  motoristasDB.push(novo);
+  document.getElementById('addCpf').value = '';
+  document.getElementById('addNome').value = '';
+  document.getElementById('addFilial').value = '';
+  document.getElementById('formBody').classList.remove('open');
+  document.getElementById('btnToggleForm').classList.remove('open');
+  atualizarDashboardCompleto();
+  toast('Condutor adicionado! Clique em Salvar para gravar no Sheets.');
+  _dispararSalvamento('salvar_tudo', {{ motoristas: motoristasDB }});
 }}
 
 function expandirFilial(nomeFilial){{
@@ -1520,44 +1394,37 @@ async function confirmarEdicaoFicha(){{
     foto:          fotoTemporariaBase64 || '',
     dssAnual
   }};
-  mostrarSpinner(true);
-  try{{
-    const res = await apiFetch(`/api/motoristas/${{encodeURIComponent(motoristaEmEdicaoCpf)}}`, 'PUT', atualizado);
-    if(res.ok){{
-      motoristasDB[idx] = atualizado;
-      fecharJanelaDriver();
-      atualizarDashboardCompleto();
-      if(filialModalAtiva) expandirFilial(filialModalAtiva);
-      toast('Ficha atualizada e salva no Google Sheets!');
-    }} else {{ toast(res.erro || 'Erro ao salvar.', 'erro'); }}
-  }} catch(e){{ toast('Falha de conexão.', 'erro'); }}
-  finally{{ mostrarSpinner(false); }}
+  motoristasDB[idx] = atualizado;
+  fecharJanelaDriver();
+  atualizarDashboardCompleto();
+  if(filialModalAtiva) expandirFilial(filialModalAtiva);
+  toast('Ficha atualizada! Clique em Salvar para gravar no Sheets.');
+  _dispararSalvamento('salvar_tudo', {{ motoristas: motoristasDB }});
 }}
 
-async function deletarMotoristaAtual(cpf, nome){{
+function deletarMotoristaAtual(cpf, nome){{
   if(!confirm(`Remover permanentemente o condutor ${{nome}}?`)) return;
-  mostrarSpinner(true);
-  try{{
-    const res = await apiFetch(`/api/motoristas/${{encodeURIComponent(cpf)}}`, 'DELETE');
-    if(res.ok){{
-      motoristasDB = motoristasDB.filter(m => m.cpf !== cpf);
-      fecharJanelaDriver();
-      atualizarDashboardCompleto();
-      if(filialModalAtiva) expandirFilial(filialModalAtiva);
-      toast('Condutor removido.');
-    }} else {{ toast(res.erro || 'Erro ao remover.', 'erro'); }}
-  }} catch(e){{ toast('Falha de conexão.', 'erro'); }}
-  finally{{ mostrarSpinner(false); }}
+  motoristasDB = motoristasDB.filter(m => m.cpf !== cpf);
+  fecharJanelaDriver();
+  atualizarDashboardCompleto();
+  if(filialModalAtiva) expandirFilial(filialModalAtiva);
+  toast('Condutor removido! Clique em Salvar para gravar no Sheets.');
+  _dispararSalvamento('salvar_tudo', {{ motoristas: motoristasDB }});
 }}
 
-async function salvarTudoNoSheets(){{
-  mostrarSpinner(true);
+function salvarTudoNoSheets(){{
+  toast('Salvando no Google Sheets...');
+  _dispararSalvamento('salvar_tudo', {{ motoristas: motoristasDB }});
+}}
+
+function _dispararSalvamento(action, dados){{
   try{{
-    const res = await apiFetch('/api/salvar_tudo', 'POST', {{ motoristas: motoristasDB }});
-    if(res.ok) toast('Base salva com sucesso no Google Sheets!');
-    else toast(res.erro || 'Erro ao salvar.', 'erro');
-  }} catch(e){{ toast('Falha de conexão.', 'erro'); }}
-  finally{{ mostrarSpinner(false); }}
+    const payload = encodeURIComponent(JSON.stringify(dados));
+    const base = window.parent.location.href.split('?')[0];
+    window.parent.location.href = base + '?action=' + action + '&payload=' + payload;
+  }} catch(e){{
+    toast('Erro ao comunicar com o servidor.', 'erro');
+  }}
 }}
 
 function voltarPaginaAnterior(){{
@@ -1888,3 +1755,20 @@ HTML = HTML.replace("__ANO__", str(datetime.now().year))
 
 # ─── Renderiza o HTML no Streamlit ────────────────────────────────────────────
 components.html(HTML, height=800, scrolling=True)
+
+# ─── Recebe ação do JS e salva no Google Sheets ───────────────────────────────
+params = st.query_params
+if "action" in params:
+    action  = params.get("action", "")
+    payload = params.get("payload", "")
+    try:
+        dados = json.loads(payload) if payload else {}
+    except Exception:
+        dados = {}
+    if action == "salvar_tudo" and "motoristas" in dados:
+        try:
+            salvar_todos_motoristas(dados["motoristas"])
+        except Exception as e:
+            st.error(f"Erro ao salvar: {e}")
+    st.query_params.clear()
+    st.rerun()
