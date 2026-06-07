@@ -1583,7 +1583,7 @@ function _gerarRelatorio(mes, lista, realizado){{
     setStatus('Conectando ao Google Sheets...', false);
     // Aguarda o Flask estar pronto (até 10 tentativas)
     let tentativas = 0;
-    while(tentativas < 10){{
+   while(tentativas < 20){{
       try{{
         progressB.style.width = (40 + tentativas * 6) + '%';
         const res  = await fetch(API + '/api/status_arquivo');
@@ -1598,7 +1598,7 @@ function _gerarRelatorio(mes, lista, realizado){{
         }}
       }} catch(e){{ /* ainda não pronto */ }}
       tentativas++;
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise(r => setTimeout(r, 2000));
     }}
     setStatus('Erro: servidor não respondeu. Verifique credentials.json', true);
   }}
