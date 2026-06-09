@@ -506,7 +506,7 @@ HTML = f"""<!DOCTYPE html>
   .kpi-modal-label{{font-size:13px}}
   .admin-panel-body.open{{max-height:420px}}
   .form-grid{{grid-template-columns:1fr 1fr;gap:8px}}
-  .charts-row{{grid-template-columns:1fr!important}}
+  .charts-row{{grid-template-columns:1fr 1fr!important}}
 }}
 
 @media (max-width:480px){{
@@ -702,8 +702,8 @@ HTML = f"""<!DOCTYPE html>
     </div>
   </div>
 
-  <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:12px;align-items:stretch;" class="charts-row">
-    <div class="panel" style="display:flex;flex-direction:column;">
+ <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:12px;" class="charts-row">
+    <div class="panel" style="display:flex;flex-direction:column;margin-bottom:0;">
       <div class="sec-title">DSS por sessão — __ANO__ (registros realizados)</div>
       <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;align-items:center;">
         <span style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#16a34a;"><span style="display:inline-block;width:22px;height:8px;border-radius:2px;background:#16a34a;"></span>100% adesão</span>
@@ -715,7 +715,7 @@ HTML = f"""<!DOCTYPE html>
       </div>
       <div class="chart-wrap" id="dssChartWrap" style="height:260px;transition:height 0.4s ease;"><canvas id="dssChart"></canvas></div>
     </div>
-    <div class="panel" style="display:flex;flex-direction:column;">
+    <div class="panel" style="display:flex;flex-direction:column;margin-bottom:0;">
       <div class="sec-title">Motoristas por filial — total e pendências DSS</div>
       <div class="leg">
         <div class="leg-item"><span class="leg-sq" style="background:#22cc88"></span>Com DSS</div>
@@ -723,19 +723,28 @@ HTML = f"""<!DOCTYPE html>
       </div>
       <div class="chart-wrap" style="flex:1;min-height:160px;"><canvas id="filialChart"></canvas></div>
     </div>
-  </div>
-
-  <div class="panel">
-    <div class="sec-title">Status geral anual — indicadores por mês</div>
-    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;align-items:center;">
-      <span style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#16a34a;"><span style="display:inline-block;width:22px;height:8px;border-radius:2px;background:#16a34a;"></span>100% adesão</span>
-      <span style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#3b7dd8;"><span style="display:inline-block;width:22px;height:8px;border-radius:2px;background:#3b7dd8;"></span>+50% adesão</span>
-      <span style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#d97706;"><span style="display:inline-block;width:22px;height:8px;border-radius:2px;background:#d97706;"></span>Menos de 50%</span>
-      <span style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#dc2626;"><span style="display:inline-block;width:22px;height:8px;border-radius:2px;background:#dc2626;"></span>Sem registro</span>
-      <span style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#1a3a6b;"><span style="display:inline-block;width:22px;height:8px;border-radius:2px;background:#1a3a6b;border:1px solid #c4d0e4;"></span>Mês atual</span>
-      <span style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#9aaabb;"><span style="display:inline-block;width:22px;height:8px;border-radius:2px;background:rgba(180,200,230,0.5);"></span>Futuro</span>
+    <div class="panel" style="display:flex;flex-direction:column;margin-bottom:0;">
+      <div class="sec-title">Status geral anual — indicadores por mês</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;align-items:center;">
+        <span style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#16a34a;"><span style="display:inline-block;width:22px;height:8px;border-radius:2px;background:#16a34a;"></span>100% adesão</span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#3b7dd8;"><span style="display:inline-block;width:22px;height:8px;border-radius:2px;background:#3b7dd8;"></span>+50% adesão</span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#d97706;"><span style="display:inline-block;width:22px;height:8px;border-radius:2px;background:#d97706;"></span>Menos de 50%</span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#dc2626;"><span style="display:inline-block;width:22px;height:8px;border-radius:2px;background:#dc2626;"></span>Sem registro</span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#1a3a6b;"><span style="display:inline-block;width:22px;height:8px;border-radius:2px;background:#1a3a6b;border:1px solid #c4d0e4;"></span>Mês atual</span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#9aaabb;"><span style="display:inline-block;width:22px;height:8px;border-radius:2px;background:rgba(180,200,230,0.5);"></span>Futuro</span>
+      </div>
+      <div style="position:relative;width:100%;flex:1;min-height:160px;"><canvas id="statusAnualChart" role="img" aria-label="Gráfico de barras com DSS realizados, acidentes, multas e excessos de velocidade por mês"></canvas></div>
     </div>
-    <div style="position:relative;width:100%;height:200px;"><canvas id="statusAnualChart" role="img" aria-label="Gráfico de barras com DSS realizados, acidentes, multas e excessos de velocidade por mês"></canvas></div>
+    <div class="panel" style="display:flex;flex-direction:column;margin-bottom:0;">
+      <div class="sec-title">DSS anual por filial — sessões realizadas</div>
+      <div class="leg">
+        <div class="leg-item"><span class="leg-sq" style="background:#16a34a"></span>100% adesão</div>
+        <div class="leg-item"><span class="leg-sq" style="background:#3b7dd8"></span>+50%</div>
+        <div class="leg-item"><span class="leg-sq" style="background:#d97706"></span>&lt;50%</div>
+        <div class="leg-item"><span class="leg-sq" style="background:#dc2626"></span>Sem DSS</div>
+      </div>
+      <div class="chart-wrap" style="flex:1;min-height:160px;"><canvas id="filialAnualChart"></canvas></div>
+    </div>
   </div>
     <div style="margin-bottom:8px;display:flex;flex-wrap:wrap;gap:8px">
       <div class="leg-item"><span class="leg-sq" style="background:#22cc88"></span>Reciclagem ok</div>
@@ -847,8 +856,9 @@ const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
                "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
 let motoristasDB         = DADOS_INICIAIS;
-let dssChartInstance     = null;
-let filialChartInstance  = null;
+let dssChartInstance      = null;
+let filialChartInstance   = null;
+let filialAnualChartInst  = null;
 let motoristaEmEdicaoCpf = null;
 let fotoTemporariaBase64 = null;
 let filialModalAtiva     = null;
@@ -1211,8 +1221,9 @@ function renderizarGridFiliais(filiais){{
 }}
 
 function renderizarGraficos(filiais){{
-  if(dssChartInstance)   dssChartInstance.destroy();
-  if(filialChartInstance) filialChartInstance.destroy();
+  if(dssChartInstance)      dssChartInstance.destroy();
+  if(filialChartInstance)   filialChartInstance.destroy();
+  if(filialAnualChartInst)  filialAnualChartInst.destroy();
   const now         = new Date();
   const mesAtualIdx = now.getMonth();
   const semAtualIdx = Math.min(3, Math.floor((now.getDate() - 1) / 7));
@@ -1345,6 +1356,55 @@ function renderizarGraficos(filiais){{
     const isPast = mi < mesAtualIdxS;
     return (isPast && !isCur && statusDssMes[mi] === 0) ? 1 : 0;
   }});
+ // ── Gráfico DSS Anual por Filial ──
+  const filialAnualLabels = filiais.map(f => f.name);
+  const filialAnualDss    = filiais.map(f => {{
+    let total = 0;
+    motoristasDB.filter(m => (m.filial||'').toUpperCase() === f.name).forEach(m => {{
+      MESES.forEach(mes => {{ if(m.dssAnual && m.dssAnual[mes]) total += m.dssAnual[mes].filter(Boolean).length; }});
+    }});
+    return total;
+  }});
+  const filialAnualMax = filiais.map(f => f.total * MESES.length * 4);
+  const filialAnualFalta = filiais.map((f, i) => Math.max(0, filialAnualMax[i] - filialAnualDss[i]));
+  const filialAnualBarCors = filiais.map((f, i) => {{
+    const pct = filialAnualMax[i] > 0 ? filialAnualDss[i] / filialAnualMax[i] : 0;
+    if(pct >= 1.0)      return '#16a34a';
+    if(pct >= 0.5)      return '#3b7dd8';
+    if(pct >  0)        return '#d97706';
+    return '#dc2626';
+  }});
+  filialAnualChartInst = new Chart(document.getElementById('filialAnualChart'), {{
+    type: 'bar',
+    data: {{ labels: filialAnualLabels, datasets: [
+      {{ label: 'Sessões realizadas', data: filialAnualDss,   backgroundColor: filialAnualBarCors, borderRadius: 3, borderSkipped: false }},
+      {{ label: 'Sessões em falta',   data: filialAnualFalta, backgroundColor: 'rgba(220,38,38,0.12)', borderColor: 'rgba(220,38,38,0.3)', borderWidth: 1, borderRadius: 3, borderSkipped: false }}
+    ]}},
+    options: {{
+      responsive: true, maintainAspectRatio: false,
+      plugins: {{ legend: {{ display: false }},
+        tooltip: {{
+          callbacks: {{
+            title: items => items[0].label,
+            label: ctx => {{
+              const i     = ctx.dataIndex;
+              const real  = filialAnualDss[i];
+              const maxi  = filialAnualMax[i];
+              const pct   = maxi > 0 ? Math.round(real / maxi * 100) : 0;
+              return [` ${{real}} sessões realizadas de ${{maxi}}`, ` Adesão anual: ${{pct}}%`];
+            }}
+          }},
+          backgroundColor:'#ffffff', borderColor:'#dde6f4', borderWidth:1,
+          titleColor:'#1a3a6b', bodyColor:'#5a6e8a', padding:10, cornerRadius:6
+        }}
+      }},
+      scales: {{
+        x: {{ stacked: true, ticks: {{ color:'#5a6e8a', font:{{ size:8 }}, maxRotation:30, autoSkip:false }}, grid: {{ color:'rgba(180,200,230,0.4)' }} }},
+        y: {{ stacked: true, ticks: {{ color:'#5a6e8a', font:{{ size:9 }}, callback: v => Number.isInteger(v) ? v : '' }}, grid: {{ color:'rgba(180,200,230,0.4)' }}, min: 0 }}
+      }}
+    }}
+  }});
+
   window._statusAnualChartInstance = new Chart(document.getElementById('statusAnualChart'), {{
     type:'bar',
     data:{{ labels:statusLabels, datasets:[
