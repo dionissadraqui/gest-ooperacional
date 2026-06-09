@@ -1213,7 +1213,7 @@ function renderizarGridFiliais(filiais){{
         <div class="sbar neg"><span class="sbar-lbl">Acid</span><div class="sbar-track"><div class="sbar-fill" style="width:${{acidPct}}%;background:#dc2626"></div></div><span class="sbar-cnt">${{f.acid}}</span></div>
         <div class="sbar neg"><span class="sbar-lbl">Multas</span><div class="sbar-track"><div class="sbar-fill" style="width:${{multPct}}%;background:#dc2626"></div></div><span class="sbar-cnt">${{f.multas}}</span></div>
         <div class="sbar pend"><span class="sbar-lbl">Vel</span><div class="sbar-track"><div class="sbar-fill" style="width:${{velPct}}%;background:#d97706"></div></div><span class="sbar-cnt" style="color:#d97706">${{f.excVel}}</span></div>
-        <div class="sbar pend"><span class="sbar-lbl">Pend DSS</span><div class="sbar-track"><div class="sbar-fill" style="width:${{pSem}}%;background:#dc2626"></div></div><span class="sbar-cnt" style="color:#dc2626">${{f.total - f.comDss}}</span></div>
+        <div class="sbar pend"><span class="sbar-lbl">DSS</span><div class="sbar-track" style="background:#dc2626;position:relative;overflow:hidden;"><div class="sbar-fill" style="width:${{f.total>0?Math.round(f.comDss/f.total*100):0}}%;background:#16a34a;position:absolute;left:0;top:0;height:100%;border-radius:3px;transition:width .3s;"></div></div><span class="sbar-cnt" style="color:${{f.comDss===f.total&&f.total>0?'#16a34a':'#dc2626'}};width:auto;min-width:36px;">${{f.comDss}}/${{f.total}}</span></div>
       </div>
       <button class="btn-zoom" onclick="expandirFilial('${{f.name}}')"><i class="fa-solid fa-maximize"></i> Ver Condutores</button>
     </div>`;
@@ -1301,11 +1301,11 @@ function renderizarGraficos(filiais){{
       }}
     }}
   }});
-  filialChartInstance = new Chart(document.getElementById('filialChart'), {{
+ filialChartInstance = new Chart(document.getElementById('filialChart'), {{
     type:'bar',
     data:{{ labels:filiais.map(f=>f.name), datasets:[
       {{ label:'Com DSS',  data:filiais.map(f=>f.comDss),          backgroundColor:'#16a34a', borderRadius:3, borderSkipped:false }},
-      {{ label:'Sem DSS',  data:filiais.map(f=>f.total-f.comDss),  backgroundColor:'#dc2626', borderRadius:3, borderSkipped:false }}
+      {{ label:'Sem DSS',  data:filiais.map(f=>f.total-f.comDss),  backgroundColor:'rgba(220,38,38,0.12)', borderColor:'rgba(220,38,38,0.3)', borderWidth:1, borderRadius:3, borderSkipped:false }}
     ]}},
     options:{{ responsive:true, maintainAspectRatio:false, plugins:{{ legend:{{ display:false }} }},
       scales:{{
