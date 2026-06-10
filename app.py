@@ -235,8 +235,30 @@ HTML = f"""<!DOCTYPE html>
 .top-bar{{background:#ffffff;border-bottom:2px solid #dde6f4;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(20,50,120,0.07);position:relative;}}
 .brand{{display:flex;align-items:center;gap:10px}}
 .brand-logo{{background:#f0f4fa;border:1.5px solid #c4d0e4;border-radius:6px;padding:6px 14px;display:flex;align-items:center;gap:8px}}
-.dot-anim{{width:10px;height:10px;border-radius:50%;background:#e53e3e;animation:pulse 2s infinite}}
-@keyframes pulse{{0%,100%{{opacity:1}}50%{{opacity:.3}}}}
+.dot-anim{{
+  width:10px;height:10px;border-radius:50%;background:#e53e3e;
+  flex-shrink:0;position:relative;
+  box-shadow:0 0 4px #e53e3e,0 0 8px #e53e3e;
+  animation:dotBlink 1.4s ease-in-out infinite;
+}}
+.dot-anim::after{{
+  content:'';position:absolute;
+  top:50%;left:50%;
+  width:10px;height:10px;
+  border-radius:50%;
+  background:transparent;
+  border:2px solid #e53e3e;
+  transform:translate(-50%,-50%) scale(1);
+  animation:sonarRing 1.4s ease-out infinite;
+}}
+@keyframes dotBlink{{
+  0%,100%{{opacity:1;box-shadow:0 0 4px #e53e3e,0 0 8px #e53e3e;}}
+  50%{{opacity:0.4;box-shadow:0 0 2px #e53e3e;}}
+}}
+@keyframes sonarRing{{
+  0%{{transform:translate(-50%,-50%) scale(1);opacity:0.9;border-color:#e53e3e;}}
+  100%{{transform:translate(-50%,-50%) scale(3.5);opacity:0;border-color:rgba(229,62,62,0);}}
+}}
 .brand-name{{font-size:13px;font-weight:700;letter-spacing:2px;color:#1a3a6b;text-transform:uppercase}}
 .brand-sub{{font-size:11px;color:#1a7a4a;letter-spacing:1px}}
 .luft-name{{font-size:26px;font-weight:900;color:#1a3a6b;letter-spacing:-1px}}
