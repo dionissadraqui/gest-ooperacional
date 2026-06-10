@@ -814,12 +814,12 @@ HTML = f"""<!DOCTYPE html>
             <thead>
               <tr>
                 <th>CPF / Motorista (Clique para abrir a ficha)</th>
+                <th style="text-align:center">DSS Ano</th>
                 <th>Reciclagem</th><th>Simulador</th>
                 <th style="text-align:center">Excesso Vel.</th>
                 <th style="text-align:center">Multas</th>
                 <th style="text-align:center">Acidentes</th>
               </tr>
-            </thead>
             <tbody id="mDriversTableBody"></tbody>
           </table>
         </div>
@@ -1494,8 +1494,19 @@ function expandirFilial(nomeFilial){{
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#666;">Nenhum motorista cadastrado nesta filial.</td></tr>';
   }} else {{
     listagem.forEach(m => {{
+      console.log('DSS de', m.nome, JSON.stringify(m.dssAnual));
+      let dssAno = 0;
+      MESES.forEach(mes => {{
+        if(m.dssAnual && m.dssAnual[mes]) {{
+          m.dssAnual[mes].forEach(s => {{ if(s === true || s === 1) dssAno++; }});
+        }}
+      }});
+      const dssMax = 48;
+      const dssPct = Math.round(dssAno / dssMax * 100);
+      const dssCor = dssPct >= 100 ? '#16a34a' : dssPct >= 50 ? '#3b7dd8' : dssPct > 0 ? '#d97706' : '#dc2626';
       tbody.innerHTML += `<tr class="driver-row" onclick="abrirFichaMotorista('${{m.cpf}}')">
         <td><div class="m-name">${{m.nome}}</div><div class="m-cpf">CPF: ${{m.cpf}}</div></td>
+        <td style="text-align:center"><span class="m-count-badge" style="color:${{dssCor}};border-color:${{dssCor}};background:${{dssCor}}18;">${{dssAno}}/${{dssMax}}</span></td>
         <td><span class="m-badge ${{m.reciclagem==='OK'?'ok':'pend'}}">${{m.reciclagem}}</span></td>
         <td><span class="m-badge ${{m.simulador==='OK'?'ok':'pend'}}">${{m.simulador}}</span></td>
         <td style="text-align:center"><span class="m-count-badge">${{m.excesso}}</span></td>
