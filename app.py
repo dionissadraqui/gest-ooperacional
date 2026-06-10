@@ -232,7 +232,7 @@ HTML = f"""<!DOCTYPE html>
 .db{{background:#f0f4fa;color:#1a2a44;font-family:'Segoe UI',sans-serif;padding:0;font-size:14px}}
 
 /* ── TOP BAR ── */
-.top-bar{{background:#ffffff;border-bottom:2px solid #dde6f4;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(20,50,120,0.07)}}
+.top-bar{{background:#ffffff;border-bottom:2px solid #dde6f4;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(20,50,120,0.07);position:relative;}}
 .brand{{display:flex;align-items:center;gap:10px}}
 .brand-logo{{background:#f0f4fa;border:1.5px solid #c4d0e4;border-radius:6px;padding:6px 14px;display:flex;align-items:center;gap:8px}}
 .dot-anim{{width:10px;height:10px;border-radius:50%;background:#e53e3e;animation:pulse 2s infinite}}
@@ -588,11 +588,14 @@ HTML = f"""<!DOCTYPE html>
 <div class="toast" id="toastMsg"><i class="fa-solid fa-circle-check"></i><span id="toastText"></span></div>
 
 <div class="top-bar">
-  <div class="brand">
+  <div class="brand" style="min-width:220px;">
     <div class="brand-logo"><div class="dot-anim"></div><div class="brand-name">Controle<br><span class="brand-sub">Motoristas</span></div></div>
-    <div class="luft-name">LUFT<span> LOGISTICS</span></div>
+    <div id="topbarNomeUsuario" style="font-size:26px;font-weight:900;color:#1a4fa0;letter-spacing:-0.5px;"></div>
   </div>
-  <div class="pct-box" style="display:flex;align-items:center;gap:16px;">
+  <div style="position:absolute;left:50%;transform:translateX(-50%);">
+    <div class="luft-name" style="font-size:32px;">LUFT<span> LOGISTICS</span></div>
+  </div>
+  <div class="pct-box" style="display:flex;align-items:center;gap:16px;min-width:220px;justify-content:flex-end;">
     <div>
       <div class="pct-lbl">Regularidade Geral DSS</div>
       <div class="pct-val" id="macroPctDss">—</div>
@@ -2056,13 +2059,19 @@ function _gerarRelatorio(mes, lista, realizado){{
 }}
 
 // ── Login + Inicialização ──
-const CREDENCIAIS = {{ usuario: 'luft123', senha: 'luft321' }};
+const CREDENCIAIS = [
+  {{ usuario: 'rafaela.silva@luftagro.com.br', senha: 'rafaela.silva321', nome: 'Rafaela Silva' }},
+  {{ usuario: 'dionis.rodrigues@luftagro.com.br', senha: 'dionis.rodrigues321', nome: 'Dionis Rodrigues' }},
+];
+let usuarioLogado = null;
 
 function tentarLogin(){{
   const u = document.getElementById('loginUser').value.trim();
   const p = document.getElementById('loginPass').value.trim();
   const erro = document.getElementById('loginErro');
-  if(u === CREDENCIAIS.usuario && p === CREDENCIAIS.senha){{
+  const found = CREDENCIAIS.find(c => c.usuario === u && c.senha === p);
+  if(found){{
+    usuarioLogado = found;
     document.getElementById('loginBox').style.display  = 'none';
     document.getElementById('loadingBox').style.display = 'block';
     inicializar();
@@ -2103,7 +2112,14 @@ function fecharSplashECarregar(total){{
   setTimeout(()=>{{
     splash.style.transition = 'opacity .5s';
     splash.style.opacity    = '0';
-    setTimeout(()=>{{ splash.style.display='none'; atualizarDashboardCompleto(); }}, 500);
+    setTimeout(()=>{{
+      splash.style.display='none';
+      if(usuarioLogado){{
+        const nomeEl = document.getElementById('topbarNomeUsuario');
+        if(nomeEl) nomeEl.textContent = usuarioLogado.nome;
+      }}
+      atualizarDashboardCompleto();
+    }}, 500);
   }}, 900);
 }}
 
