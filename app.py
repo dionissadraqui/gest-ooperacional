@@ -506,12 +506,15 @@ HTML = f"""<!DOCTYPE html>
   .kpi-modal-label{{font-size:13px}}
   .admin-panel-body.open{{max-height:420px}}
   .form-grid{{grid-template-columns:1fr 1fr;gap:8px}}
-  .charts-row{{grid-template-columns:1fr 1fr!important}}
+  .charts-row{{grid-template-columns:1fr!important}}
+}}
+
+@media (max-width:900px){{
+  .charts-row{{grid-template-columns:1fr!important}}
 }}
 
 @media (max-width:480px){{
   .kpi-row{{grid-template-columns:repeat(2,1fr);gap:6px}}
-  .kpi-val{{font-size:30px}}
   .kpi-lbl{{font-size:10px;letter-spacing:.5px}}
   .kpi-sub{{font-size:10px}}
   .luft-name{{font-size:16px}}
@@ -702,8 +705,8 @@ HTML = f"""<!DOCTYPE html>
     </div>
   </div>
 
- <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:12px;" class="charts-row">
-    <div class="panel" style="display:flex;flex-direction:column;margin-bottom:0;">
+ <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:12px;width:100%;min-width:0;" class="charts-row">
+    <div class="panel" style="display:flex;flex-direction:column;margin-bottom:0;min-width:0;overflow:hidden;">
       <div class="sec-title">DSS por sessão — __ANO__ (registros realizados)</div>
       <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;align-items:center;">
         <span style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#16a34a;"><span style="display:inline-block;width:22px;height:8px;border-radius:2px;background:#16a34a;"></span>100% adesão</span>
@@ -715,7 +718,7 @@ HTML = f"""<!DOCTYPE html>
       </div>
       <div class="chart-wrap" id="dssChartWrap" style="height:260px;transition:height 0.4s ease;"><canvas id="dssChart"></canvas></div>
     </div>
-    <div class="panel" style="display:flex;flex-direction:column;margin-bottom:0;">
+    <div class="panel" style="display:flex;flex-direction:column;margin-bottom:0;min-width:0;overflow:hidden;">
       <div class="sec-title">Motoristas por filial — total e pendências DSS</div>
       <div class="leg">
         <div class="leg-item"><span class="leg-sq" style="background:#22cc88"></span>Com DSS</div>
@@ -723,7 +726,7 @@ HTML = f"""<!DOCTYPE html>
       </div>
       <div class="chart-wrap" style="flex:1;min-height:160px;"><canvas id="filialChart"></canvas></div>
     </div>
-    <div class="panel" style="display:flex;flex-direction:column;margin-bottom:0;">
+     <div class="panel" style="display:flex;flex-direction:column;margin-bottom:0;min-width:0;overflow:hidden;">
       <div class="sec-title">Status geral anual — indicadores por mês</div>
       <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;align-items:center;">
         <span style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#16a34a;"><span style="display:inline-block;width:22px;height:8px;border-radius:2px;background:#16a34a;"></span>100% adesão</span>
@@ -735,7 +738,7 @@ HTML = f"""<!DOCTYPE html>
       </div>
       <div style="position:relative;width:100%;flex:1;min-height:160px;"><canvas id="statusAnualChart" role="img" aria-label="Gráfico de barras com DSS realizados, acidentes, multas e excessos de velocidade por mês"></canvas></div>
     </div>
-    <div class="panel" style="display:flex;flex-direction:column;margin-bottom:0;">
+    <div class="panel" style="display:flex;flex-direction:column;margin-bottom:0;min-width:0;overflow:hidden;">
       <div class="sec-title">DSS anual por filial — sessões realizadas</div>
       <div class="leg">
         <div class="leg-item"><span class="leg-sq" style="background:#16a34a"></span>100% adesão</div>
